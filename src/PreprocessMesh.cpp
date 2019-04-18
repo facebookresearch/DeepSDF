@@ -201,7 +201,7 @@ void SampleFromSurface2(pangolin::Geometry& geom, std::vector<Eigen::Vector3f>& 
       (Eigen::Vector3f)Eigen::Map<Eigen::Vector3f>(vertices.RowPtr(face(2)))
     );
 
-    if (isnan(area)) {
+    if (std::isnan(area)) {
       area = 0.f;
     }
 
