@@ -109,7 +109,6 @@ std::vector<Eigen::Vector4f> ValidPointsAndTrisFromIm(
         continue;
       total_obs++;
       unsigned int tri_ind = (int)(n[3] + 0.01f) - 1;
-      std::cout << tri_ind << std::endl;
       Eigen::Vector4f tri_track = tris[tri_ind];
       if (tri_track[3] == 0.0f)
         tris[tri_ind] = n;
@@ -630,7 +629,7 @@ void writeSDFToNPY(std::vector<Eigen::Vector3f>& xyz, std::vector<float>& sdfs, 
   cnpy::npy_save(filename, &data[0], {(long unsigned int)num_vert, 4}, "w");
 }
 
-void writeSDFToNPZ(std::vector<Eigen::Vector3f>& xyz, std::vector<float>& sdfs, std::string filename) {
+void writeSDFToNPZ(std::vector<Eigen::Vector3f>& xyz, std::vector<float>& sdfs, std::string filename, bool print_num=false) {
   unsigned int num_vert = xyz.size();
   std::vector<float> pos;
   std::vector<float> neg;
@@ -652,6 +651,10 @@ void writeSDFToNPZ(std::vector<Eigen::Vector3f>& xyz, std::vector<float>& sdfs, 
 
   cnpy::npz_save(filename, "pos", &pos[0], {(long unsigned int)(pos.size() / 4.0), 4}, "w");
   cnpy::npz_save(filename, "neg", &neg[0], {(long unsigned int)(neg.size() / 4.0), 4}, "a");
+  if (print_num) {
+      std::cout<<"pos num: "<<pos.size() / 4.0<<std::endl;
+      std::cout<<"neg num: "<<neg.size() / 4.0<<std::endl;
+  }
 }
 
 void writeSDFToPLY(
@@ -717,8 +720,8 @@ int main(int argc, char** argv) {
   std::string spatial_samples_npz;
   bool save_ply = true;
   bool test_flag = false;
-  float variance = 0.005 / 2;
-  int num_sample = 1000;
+  float variance = 0.005;
+  int num_sample = 500000;
   float rejection_criteria_obs = 0.02f;
   float rejection_criteria_tri = 0.03f;
 
@@ -740,6 +743,7 @@ int main(int argc, char** argv) {
     variance = 0.01;
   }
   float second_variance = variance / 10;
+  std::cout<<"varaince: "<<variance << " second: "<<second_variance<<std::endl;
   if (test_flag)
     second_variance = variance / 20;
 
@@ -961,7 +965,8 @@ int main(int argc, char** argv) {
   std::vector<Eigen::Vector3f> xyz;
   std::vector<Eigen::Vector3f> xyz_surf;
   std::vector<float> sdf;
-  int num_samp_near_surf = (int)(3 * num_sample / 50);
+  int num_samp_near_surf = (int)(47 * num_sample / 50);
+  std::cout<<"num_samp_near_surf: "<<num_samp_near_surf<<std::endl;
   SampleFromSurface2(geom, xyz_surf, num_samp_near_surf / 2);
 
 
@@ -986,8 +991,8 @@ int main(int argc, char** argv) {
 
   if (save_ply) {
 
-    writeSDFToPLY(xyz, sdf, plyFileNameOut, true, false);
-
+//      writeSDFToPLY(xyz, sdf, plyFileNameOut, true, false);
+      writeSDFToPLY(xyz, sdf, plyFileNameOut, false, true);
   }
 
   std::cout << "num points sampled: " << xyz.size() << std::endl;
@@ -995,8 +1000,8 @@ int main(int argc, char** argv) {
   if (save_npz == std::string::npos)
     writeSDFToNPY(xyz, sdf, npyFileName);
   else {
-    writeSDFToNPZ(xyz, sdf, npyFileName);
-  }
+      writeSDFToNPZ(xyz, sdf, npyFileName, true);
+    }
 
   return 0;
 }
