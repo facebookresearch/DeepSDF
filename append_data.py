@@ -4,10 +4,13 @@
 import argparse
 import concurrent.futures
 import glob
+import json
 import logging
 import os
 import subprocess
-import workspace
+
+import deep_sdf
+import deep_sdf.workspace as ws
 
 def filter_classes_glob(patterns, classes):
   import fnmatch
@@ -61,85 +64,108 @@ def process_mesh(mesh_filepath, target_filepath):
     stdout=subprocess.DEVNULL) #, stderr=subprocess.DEVNULL)
   subproc.wait()
 
-arg_parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=
-  'Pre-processes data from a data source and append the results to a dataset.')
-arg_parser.add_argument('--data_dir', '-d', dest='data_dir', required=True, help=
-  'The directory which holds all preprocessed data.')
-arg_parser.add_argument('--source', '-s', dest='source_dir', required=True, help=
-  'The directory which holds the data to preprocess and append.')
-arg_parser.add_argument('--name', '-n', dest='source_name', default=None, help=
-  'The name to use for the data source. If unspecified, it defaults to the directory name.')
-arg_parser.add_argument('--classes', '-c', dest='class_patterns', default=None, nargs='+', help=
-  'This flag takes as arguments a pattern type (either "glob" or "regex"), followed by a ' + \
-  'variable number of patterns.\nExamples: --classes glob \'03*\' \'04*\'' + \
-  '\n          --classes regex \\d+')
-arg_parser.add_argument('--debug', dest='debug', default=False, action='store_true', help=
-  'If set, debugging messages will be printed')
-arg_parser.add_argument('--skip', dest='skip', default=False, action='store_true', help=
-  'If set, previously-processed shapes will be skipped')
-arg_parser.add_argument('--threads', dest='num_threads', default=8, help=
-  'The number of threads to use to process the data.')
+def append_data_source_map(data_dir, name, source):
 
-args = arg_parser.parse_args()
+    data_source_map_filename = os.path.join(data_dir, '.data_sources.json');
 
-if args.source_name is None:
-  args.source_name = os.path.basename(os.path.normpath(args.source_dir))
+    print("data sources stored to " + data_source_map_filename)
 
-if args.debug:
-  logging.basicConfig(level=logging.DEBUG)
+    data_source_map = {}
 
-dest_dir = os.path.join(args.data_dir, args.source_name)
+    if os.path.isfile(data_source_map_filename):
+        with open(data_source_map_filename, 'r') as f:
+            data_source_map = json.load(f);
 
-logging.info('Preprocessing data from ' + args.source_dir + ' and placing the results in ' +
-  dest_dir)
+    data_source_map[name] = os.path.abspath(source)
 
-if not os.path.isdir(dest_dir):
-  os.mkdir(dest_dir)
+    with open(data_source_map_filename, 'w') as f:
+        json.dump(data_source_map, f, indent=2)
 
-class_directories = os.listdir(args.source_dir)
+    import sys
+    sys.exit()
 
-if not args.class_patterns is None:
-  class_directories = filter_classes(args.class_patterns, class_directories)
+if __name__ == '__main__':
 
-logging.debug('Processing classes: ' + str(args.class_patterns))
+    arg_parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=
+      'Pre-processes data from a data source and append the results to a dataset.')
+    arg_parser.add_argument('--data_dir', '-d', dest='data_dir', required=True, help=
+      'The directory which holds all preprocessed data.')
+    arg_parser.add_argument('--source', '-s', dest='source_dir', required=True, help=
+      'The directory which holds the data to preprocess and append.')
+    arg_parser.add_argument('--name', '-n', dest='source_name', default=None, help=
+      'The name to use for the data source. If unspecified, it defaults to the directory name.')
+    arg_parser.add_argument('--classes', '-c', dest='class_patterns', default=None, nargs='+', help=
+      'This flag takes as arguments a pattern type (either "glob" or "regex"), followed by a ' + \
+      'variable number of patterns.\nExamples: --classes glob \'03*\' \'04*\'' + \
+      '\n          --classes regex \\d+')
+    arg_parser.add_argument('--skip', dest='skip', default=False, action='store_true', help=
+      'If set, previously-processed shapes will be skipped')
+    arg_parser.add_argument('--threads', dest='num_threads', default=8, help=
+      'The number of threads to use to process the data.')
 
-meshes_and_targets = []
+    deep_sdf.add_common_args(arg_parser)
 
-for class_dir in class_directories:
-  class_path = os.path.join(args.source_dir, class_dir)
-  instance_dirs = os.listdir(class_path)
+    args = arg_parser.parse_args()
 
-  logging.debug('Processing ' + str(len(instance_dirs)) + ' instances of class ' + \
-    class_dir)
+    deep_sdf.configure_logging(args)
 
-  target_dir = os.path.join(dest_dir, class_dir)
+    if args.source_name is None:
+      args.source_name = os.path.basename(os.path.normpath(args.source_dir))
 
-  if not os.path.isdir(target_dir):
-    os.mkdir(target_dir)
+    dest_dir = os.path.join(args.data_dir, args.source_name)
 
-  for instance_dir in instance_dirs:
+    logging.info('Preprocessing data from ' + args.source_dir + ' and placing the results in ' +
+      dest_dir)
 
-    shape_dir = os.path.join(class_path, instance_dir)
+    if not os.path.isdir(dest_dir):
+      os.mkdir(dest_dir)
 
-    processed_filepath = os.path.join(target_dir, instance_dir + '.npz')
-    if args.skip and os.path.isfile(processed_filepath):
-      logging.debug("skipping " + processed_filepath)
-      continue
+    append_data_source_map(args.data_dir, args.source_name, args.source_dir)
 
-    try:
-      mesh_filename = get_mesh_filename(shape_dir)
+    class_directories = os.listdir(args.source_dir)
 
-      meshes_and_targets.append((os.path.join(shape_dir, mesh_filename), processed_filepath))
+    if not args.class_patterns is None:
+      class_directories = filter_classes(args.class_patterns, class_directories)
 
-    except NoMeshFileError:
-      logging.warning("No mesh found for instance " + instance_dir)
-    except MultipleMeshFileError:
-      logging.warning("Multiple meshes found for instance " + instance_dir)
+    logging.debug('Processing classes: ' + str(args.class_patterns))
+
+    meshes_and_targets = []
+
+    for class_dir in class_directories:
+      class_path = os.path.join(args.source_dir, class_dir)
+      instance_dirs = os.listdir(class_path)
+
+      logging.debug('Processing ' + str(len(instance_dirs)) + ' instances of class ' + \
+        class_dir)
+
+      target_dir = os.path.join(dest_dir, class_dir)
+
+      if not os.path.isdir(target_dir):
+        os.mkdir(target_dir)
+
+      for instance_dir in instance_dirs:
+
+        shape_dir = os.path.join(class_path, instance_dir)
+
+        processed_filepath = os.path.join(target_dir, instance_dir + '.npz')
+        if args.skip and os.path.isfile(processed_filepath):
+          logging.debug("skipping " + processed_filepath)
+          continue
+
+        try:
+          mesh_filename = get_mesh_filename(shape_dir)
+
+          meshes_and_targets.append((os.path.join(shape_dir, mesh_filename), processed_filepath))
+
+        except NoMeshFileError:
+          logging.warning("No mesh found for instance " + instance_dir)
+        except MultipleMeshFileError:
+          logging.warning("Multiple meshes found for instance " + instance_dir)
 
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=args.num_threads) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.num_threads) as executor:
 
-  for mesh_filepath, target_filepath in meshes_and_targets:
-    executor.submit(process_mesh, mesh_filepath, target_filepath)
+      for mesh_filepath, target_filepath in meshes_and_targets:
+        executor.submit(process_mesh, mesh_filepath, target_filepath)
 
-  executor.shutdown()
+      executor.shutdown()

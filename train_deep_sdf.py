@@ -13,8 +13,8 @@ import math
 import json
 import time
 
-
-import workspace
+import deep_sdf
+import deep_sdf.workspace as ws
 
 class LearningRateSchedule:
 
@@ -57,20 +57,20 @@ def get_learning_rate_schedules(specs):
 
 def save_model(experiment_directory, filename, decoder, epoch):
 
-    if not os.path.isdir(experiment_directory + workspace.model_params_subdir):
-        os.mkdir(experiment_directory + workspace.model_params_subdir)
+    if not os.path.isdir(experiment_directory + ws.model_params_subdir):
+        os.mkdir(experiment_directory + ws.model_params_subdir)
 
     torch.save({
             'epoch' : epoch,
             'model_state_dict' : decoder.state_dict()
         },
-        experiment_directory + workspace.model_params_subdir + filename
+        experiment_directory + ws.model_params_subdir + filename
     )
 
 #TODO: duplicated in workspace
 def load_model(experiment_directory, filename, decoder):
 
-    full_filename = os.path.join(experiment_directory, workspace.model_params_subdir, filename)
+    full_filename = os.path.join(experiment_directory, ws.model_params_subdir, filename)
 
     if not os.path.isfile(full_filename):
         raise Exception('model state dict "{}" does not exist'.format(full_filename))
@@ -84,20 +84,20 @@ def load_model(experiment_directory, filename, decoder):
 
 def save_optimizer(experiment_directory, filename, optimizer, epoch):
 
-    if not os.path.isdir(experiment_directory + workspace.optimizer_params_subdir):
-        os.mkdir(experiment_directory + workspace.optimizer_params_subdir)
+    if not os.path.isdir(experiment_directory + ws.optimizer_params_subdir):
+        os.mkdir(experiment_directory + ws.optimizer_params_subdir)
 
     torch.save({
             'epoch' : epoch,
             'optimizer_state_dict' : optimizer.state_dict(),
         },
-        experiment_directory + workspace.optimizer_params_subdir + filename
+        experiment_directory + ws.optimizer_params_subdir + filename
     )
 
 #TODO: duplicated in workspace
 def load_optimizer(experiment_directory, filename, optimizer):
 
-    full_filename = os.path.join(experiment_directory, workspace.optimizer_params_subdir, filename)
+    full_filename = os.path.join(experiment_directory, ws.optimizer_params_subdir, filename)
 
     if not os.path.isfile(full_filename):
         raise Exception('optimizer state dict "{}" does not exist'.format(full_filename))
@@ -110,8 +110,8 @@ def load_optimizer(experiment_directory, filename, optimizer):
 
 def save_latent_vectors(experiment_directory, filename, latent_vec, epoch):
 
-    if not os.path.isdir(experiment_directory + workspace.latent_codes_subdir):
-        os.mkdir(experiment_directory + workspace.latent_codes_subdir)
+    if not os.path.isdir(experiment_directory + ws.latent_codes_subdir):
+        os.mkdir(experiment_directory + ws.latent_codes_subdir)
 
     all_latents = torch.zeros(0)
     for l in latent_vec:
@@ -121,13 +121,13 @@ def save_latent_vectors(experiment_directory, filename, latent_vec, epoch):
             'epoch' : epoch,
             'latent_codes' : all_latents
         },
-        experiment_directory + workspace.latent_codes_subdir + filename
+        experiment_directory + ws.latent_codes_subdir + filename
     )
 
 #TODO: duplicated in workspace
 def load_latent_vectors(experiment_directory, filename, lat_vecs):
 
-    full_filename = os.path.join(experiment_directory, workspace.latent_codes_subdir, filename)
+    full_filename = os.path.join(experiment_directory, ws.latent_codes_subdir, filename)
 
     if not os.path.isfile(full_filename):
         raise Exception('latent state file "{}" does not exist'.format(full_filename))
@@ -158,11 +158,11 @@ def save_logs(experiment_directory, loss_log, lr_log, timing_log,
         'latent_magnitude' : lat_mag_log,
         'param_magnitude' : param_mag_log
     },
-    experiment_directory + workspace.logs_filename)
+    experiment_directory + ws.logs_filename)
 
 def load_logs(experiment_directory):
 
-    full_filename = os.path.join(experiment_directory, workspace.logs_filename)
+    full_filename = os.path.join(experiment_directory, ws.logs_filename)
 
     if not os.path.isfile(full_filename):
         raise Exception('log file "{}" does not exist'.format(full_filename))
@@ -207,7 +207,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     logging.debug('running ' + experiment_directory)
 
-    specs = workspace.load_experiment_specifications(experiment_directory)
+    specs = ws.load_experiment_specifications(experiment_directory)
 
     logging.info('Experiment description: \n' + specs['Description'])
 
@@ -236,19 +236,15 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     def save_latest(epoch):
 
-        save_model(os.path.join(experiment_directory, 'latest.pth'), decoder, epoch)
-        save_optimizer(os.path.join(experiment_directory, 'latest.pth'), optimizer_all, epoch)
-        save_latent_vectors(os.path.join(experiment_directory, 'latest.pth'), lat_vecs, epoch)
+        save_model(experiment_directory, 'latest.pth', decoder, epoch)
+        save_optimizer(experiment_directory, 'latest.pth', optimizer_all, epoch)
+        save_latent_vectors(experiment_directory, 'latest.pth', lat_vecs, epoch)
 
     def save_checkpoints(epoch):
 
-        save_model(os.path.join(experiment_directory, str(epoch) + '.pth'), decoder, epoch)
-        save_optimizer(
-            os.path.join(experiment_directory, str(epoch) + '.pth'), optimizer_all, epoch
-        )
-        save_latent_vectors(
-            os.path.join(experiment_directory, str(epoch) + '.pth'), lat_vecs, epoch
-        )
+        save_model(experiment_directory, str(epoch) + '.pth', decoder, epoch)
+        save_optimizer(experiment_directory, str(epoch) + '.pth', optimizer_all, epoch)
+        save_latent_vectors(experiment_directory, str(epoch) + '.pth', lat_vecs, epoch)
 
     def signal_handler(sig, frame):
         logging.info('Stopping early...')
@@ -517,16 +513,11 @@ if __name__ == '__main__':
         'This splits the batch into separate subbatches which are processed separately, with ' + \
         'gradients accumulated across all subbatches. This allows for training with large ' + \
         'effective batch sizes in memory constrained environments.')
-    arg_parser.add_argument('--debug', dest='debug', default=False, action='store_true', help=
-        'If set, debugging messages will be printed')
-    arg_parser.add_argument('--quiet', '-q', dest='quiet', default=False, action='store_true', help=
-        'If set, only warnings will be printed')
+
+    deep_sdf.add_common_args(arg_parser)
 
     args = arg_parser.parse_args()
 
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-    elif args.quiet:
-        logging.basicConfig(level=logging.WARNING)
+    deep_sdf.configure_logging(args)
 
     main_function(args.experiment_directory, args.continue_from, int(args.batch_split))
