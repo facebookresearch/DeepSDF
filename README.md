@@ -138,7 +138,7 @@ Given the stochastic nature of shape reconstruction (shapes are reconstructed vi
 
 ## Examples
 
-Here's a list of commands for a typical use case of training and evaluating a DeepSDF model using the "lamps" class of the ShapeNet version 2 dataset. 
+Here's a list of commands for a typical use case of training and evaluating a DeepSDF model using the "sofa" class of the ShapeNet version 2 dataset. 
 
 ```
 # navigate to the DeepSdf root directory
