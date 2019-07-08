@@ -1,4 +1,10 @@
-# Organization
+# DeepSDF
+
+This is an implementation of the CVPR '19 paper "DeepSDF: Learning Continuous Signed Distance Functions for Shape Representation" by Park et al. See the paper [here][6]. 
+
+[![DeepSDF Video](https://img.youtube.com/vi/LILRJzMQw5o/0.jpg)](https://www.youtube.com/watch?v=LILRJzMQw5o)
+
+## Organization
 
 The various Python scripts assume a shared organizational structure such that the output from one script can easily be used as input to another. This is true for both preprocessed data as well as experiments which make use of the datasets.
 
@@ -52,7 +58,7 @@ Each DeepSDF experiment is organized in an "experiment directory", which collect
 
 The only file that is required to begin an experiment is 'specs.json', which sets the parameters, network architecture, and data to be used for the experiment.
 
-# How to Use DeepSDF
+## How to Use DeepSDF
 
 ### Pre-processing the Data
 
@@ -130,7 +136,7 @@ python evaluate.py -e <experiment_directory> -d <data_directory> --split <split_
 Given the stochastic nature of shape reconstruction (shapes are reconstructed via gradient descent with a random initialization), reconstruction accuracy will vary across multiple reruns of the same shape. The metrics listed in Table 3 for the "chair" and "plane" are the result of performing two reconstructions of each shape and keeping the one with the lowest chamfer distance. The code as released does not support this evaluation and thus the reproduced results will likely differ from those produced in the paper. For example, our test run with the provided code produced Chamfer distance (multiplied by 10<sup>3</sup>) mean and median of 0.157 and 0.062 respectively for the "chair" class and 0.101 and 0.044 for the "plane" class (compared to 0.204, 0.072 for chairs and 0.143, 0.036 for planes reported in the paper). 
 
 
-# Examples
+## Examples
 
 Here's a list of commands for a typical use case of training and evaluating a DeepSDF model using the "lamps" class of the ShapeNet version 2 dataset. 
 
@@ -160,8 +166,9 @@ python reconstruct.py -e examples/sofas -c 2000 --split examples/splits/sv2_sofa
 python evaluate.py -e examples/sofas -c 2000 -d data -s examples/splits/sv2_sofas_test.json 
 ```
 
-# License
+## License
 
 DeepSDF is relased under the MIT License. See the [LICENSE file][5] for more details.
 
 [5]: https://github.com/facebookresearch/DeepSDF/blob/master/LICENSE
+[6]: http://openaccess.thecvf.com/content_CVPR_2019/html/Park_DeepSDF_Learning_Continuous_Signed_Distance_Functions_for_Shape_Representation_CVPR_2019_paper.html
