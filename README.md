@@ -18,7 +18,7 @@ year = {2019}
 }
 ```
 
-## Code Organization
+## File Organization
 
 The various Python scripts assume a shared organizational structure such that the output from one script can easily be used as input to another. This is true for both preprocessed data as well as experiments which make use of the datasets.
 
