@@ -4,7 +4,21 @@ This is an implementation of the CVPR '19 paper "DeepSDF: Learning Continuous Si
 
 [![DeepSDF Video](https://img.youtube.com/vi/LILRJzMQw5o/0.jpg)](https://www.youtube.com/watch?v=LILRJzMQw5o)
 
-## Organization
+## Citing DeepSDF
+
+If you use DeepSDF in your research, please cite the
+[paper](http://openaccess.thecvf.com/content_CVPR_2019/html/Park_DeepSDF_Learning_Continuous_Signed_Distance_Functions_for_Shape_Representation_CVPR_2019_paper.html):
+```
+@InProceedings{Park_2019_CVPR,
+author = {Park, Jeong Joon and Florence, Peter and Straub, Julian and Newcombe, Richard and Lovegrove, Steven},
+title = {DeepSDF: Learning Continuous Signed Distance Functions for Shape Representation},
+booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2019}
+}
+```
+
+## Code Organization
 
 The various Python scripts assume a shared organizational structure such that the output from one script can easily be used as input to another. This is true for both preprocessed data as well as experiments which make use of the datasets.
 
@@ -165,6 +179,14 @@ python reconstruct.py -e examples/sofas -c 2000 --split examples/splits/sv2_sofa
 # evaluate the reconstructions
 python evaluate.py -e examples/sofas -c 2000 -d data -s examples/splits/sv2_sofas_test.json 
 ```
+
+## Team
+
+Jeong Joon Park, Peter Florence, Julian Straub, Richard Newcombe, Steven Lovegrove
+
+## Acknowledgements
+
+We want to acknowledge the help of Tanner Schmidt with releasing the code.
 
 ## License
 
