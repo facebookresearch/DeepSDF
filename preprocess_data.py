@@ -261,7 +261,7 @@ if __name__ == "__main__":
                 )
 
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=args.num_threads
+        max_workers=int(args.num_threads)
     ) as executor:
 
         for (
