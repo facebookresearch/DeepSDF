@@ -18,6 +18,7 @@ evaluation_subdir = "Evaluation"
 sdf_samples_subdir = "SdfSamples"
 surface_samples_subdir = "SurfaceSamples"
 normalization_param_subdir = "NormalizationParameters"
+training_meshes_subdir = "TrainingMeshes"
 
 
 def load_experiment_specifications(experiment_directory):
@@ -40,9 +41,7 @@ def load_model_parameters(experiment_directory, checkpoint, decoder):
     )
 
     if not os.path.isfile(filename):
-        raise Exception(
-            'model state dict "{}" does not exist'.format(filename)
-        )
+        raise Exception('model state dict "{}" does not exist'.format(filename))
 
     data = torch.load(filename)
 
@@ -59,9 +58,7 @@ def build_decoder(experiment_directory, experiment_specs):
 
     latent_size = experiment_specs["CodeLength"]
 
-    decoder = arch.Decoder(
-        latent_size, **experiment_specs["NetworkSpecs"]
-    ).cuda()
+    decoder = arch.Decoder(latent_size, **experiment_specs["NetworkSpecs"]).cuda()
 
     return decoder
 
@@ -88,14 +85,13 @@ def load_latent_vectors(experiment_directory, checkpoint):
 
     if not os.path.isfile(filename):
         raise Exception(
-            "The experiment directory ({}) does not include a latent code file "
-            + 'for checkpoint "{}"'.format(experiment_directory, checkpoint)
+            "The experiment directory ({}) does not include a latent code file"
+            + " for checkpoint '{}'".format(experiment_directory, checkpoint)
         )
 
     data = torch.load(filename)
 
     num_vecs = data["latent_codes"].size()[0]
-    latent_size = data["latent_codes"].size()[2]
 
     lat_vecs = []
     for i in range(num_vecs):
@@ -138,9 +134,7 @@ def get_reconstructed_code_filename(
     )
 
 
-def get_evaluation_dir(
-    experiment_dir, checkpoint, create_if_nonexistent=False
-):
+def get_evaluation_dir(experiment_dir, checkpoint, create_if_nonexistent=False):
 
     dir = os.path.join(experiment_dir, evaluation_subdir, checkpoint)
 
@@ -178,3 +172,15 @@ def get_latent_codes_dir(experiment_dir, create_if_nonexistent=False):
         os.makedirs(dir)
 
     return dir
+
+
+def get_normalization_params_filename(
+    data_dir, dataset_name, class_name, instance_name
+):
+    return os.path.join(
+        data_dir,
+        normalization_param_subdir,
+        dataset_name,
+        class_name,
+        instance_name + ".npz",
+    )

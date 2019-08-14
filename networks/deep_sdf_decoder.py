@@ -37,21 +37,29 @@ class Decoder(nn.Module):
         self.xyz_in_all = xyz_in_all
         self.weight_norm = weight_norm
 
-        for l in range(0, self.num_layers - 1):
-            if l + 1 in latent_in:
-                out_dim = dims[l + 1] - dims[0]
+        for layer in range(0, self.num_layers - 1):
+            if layer + 1 in latent_in:
+                out_dim = dims[layer + 1] - dims[0]
             else:
-                out_dim = dims[l + 1]
-                if self.xyz_in_all and l != self.num_layers - 2:
+                out_dim = dims[layer + 1]
+                if self.xyz_in_all and layer != self.num_layers - 2:
                     out_dim -= 3
 
-            if weight_norm and l in self.norm_layers:
-                setattr(self, "lin" + str(l), nn.utils.weight_norm(nn.Linear(dims[l], out_dim)))
+            if weight_norm and layer in self.norm_layers:
+                setattr(
+                    self,
+                    "lin" + str(layer),
+                    nn.utils.weight_norm(nn.Linear(dims[layer], out_dim)),
+                )
             else:
-                setattr(self, "lin" + str(l), nn.Linear(dims[l], out_dim))
+                setattr(self, "lin" + str(layer), nn.Linear(dims[layer], out_dim))
 
-            if (not weight_norm) and self.norm_layers is not None and l in self.norm_layers:
-                setattr(self, "bn" + str(l), nn.LayerNorm(out_dim))
+            if (
+                (not weight_norm)
+                and self.norm_layers is not None
+                and layer in self.norm_layers
+            ):
+                setattr(self, "bn" + str(layer), nn.LayerNorm(out_dim))
 
         self.use_tanh = use_tanh
         if use_tanh:
@@ -73,22 +81,26 @@ class Decoder(nn.Module):
         else:
             x = input
 
-        for l in range(0, self.num_layers - 1):
-            lin = getattr(self, "lin" + str(l))
-            if l in self.latent_in:
+        for layer in range(0, self.num_layers - 1):
+            lin = getattr(self, "lin" + str(layer))
+            if layer in self.latent_in:
                 x = torch.cat([x, input], 1)
-            elif l != 0 and self.xyz_in_all:
+            elif layer != 0 and self.xyz_in_all:
                 x = torch.cat([x, xyz], 1)
             x = lin(x)
             # last layer Tanh
-            if l == self.num_layers - 2 and self.use_tanh:
+            if layer == self.num_layers - 2 and self.use_tanh:
                 x = self.tanh(x)
-            if l < self.num_layers - 2:
-                if self.norm_layers is not None and l in self.norm_layers and not self.weight_norm:
-                    bn = getattr(self, "bn" + str(l))
+            if layer < self.num_layers - 2:
+                if (
+                    self.norm_layers is not None
+                    and layer in self.norm_layers
+                    and not self.weight_norm
+                ):
+                    bn = getattr(self, "bn" + str(layer))
                     x = bn(x)
                 x = self.relu(x)
-                if self.dropout is not None and l in self.dropout:
+                if self.dropout is not None and layer in self.dropout:
                     x = F.dropout(x, p=self.dropout_prob, training=self.training)
 
         if hasattr(self, "th"):

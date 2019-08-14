@@ -6,7 +6,6 @@ import logging
 import json
 import numpy as np
 import os
-import torch
 import trimesh
 
 import deep_sdf
@@ -24,22 +23,15 @@ def evaluate(experiment_directory, checkpoint, data_dir, split_filename):
         for class_name in split[dataset]:
             for instance_name in split[dataset][class_name]:
                 logging.debug(
-                    "evaluating "
-                    + os.path.join(dataset, class_name, instance_name)
+                    "evaluating " + os.path.join(dataset, class_name, instance_name)
                 )
 
                 reconstructed_mesh_filename = ws.get_reconstructed_mesh_filename(
-                    experiment_directory,
-                    checkpoint,
-                    dataset,
-                    class_name,
-                    instance_name,
+                    experiment_directory, checkpoint, dataset, class_name, instance_name
                 )
 
                 logging.debug(
-                    'reconstructed mesh is "'
-                    + reconstructed_mesh_filename
-                    + '"'
+                    'reconstructed mesh is "' + reconstructed_mesh_filename + '"'
                 )
 
                 ground_truth_samples_filename = os.path.join(
@@ -66,9 +58,7 @@ def evaluate(experiment_directory, checkpoint, data_dir, split_filename):
                     "normalization params are " + ground_truth_samples_filename
                 )
 
-                ground_truth_points = trimesh.load(
-                    ground_truth_samples_filename
-                )
+                ground_truth_points = trimesh.load(ground_truth_samples_filename)
                 reconstruction = trimesh.load(reconstructed_mesh_filename)
 
                 normalization_params = np.load(normalization_params_filename)
@@ -83,16 +73,12 @@ def evaluate(experiment_directory, checkpoint, data_dir, split_filename):
                 logging.debug("chamfer distance: " + str(chamfer_dist))
 
                 chamfer_results.append(
-                    (
-                        os.path.join(dataset, class_name, instance_name),
-                        chamfer_dist,
-                    )
+                    (os.path.join(dataset, class_name, instance_name), chamfer_dist)
                 )
 
     with open(
         os.path.join(
-            ws.get_evaluation_dir(experiment_directory, checkpoint, True),
-            "chamfer.csv",
+            ws.get_evaluation_dir(experiment_directory, checkpoint, True), "chamfer.csv"
         ),
         "w",
     ) as f:
@@ -103,9 +89,7 @@ def evaluate(experiment_directory, checkpoint, data_dir, split_filename):
 
 if __name__ == "__main__":
 
-    arg_parser = argparse.ArgumentParser(
-        description="Evaluate a DeepSDF autodecoder"
-    )
+    arg_parser = argparse.ArgumentParser(description="Evaluate a DeepSDF autodecoder")
     arg_parser.add_argument(
         "--experiment",
         "-e",

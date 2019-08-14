@@ -24,7 +24,9 @@ def reconstruct(
     lr=5e-4,
     l2reg=False,
 ):
-    def adjust_learning_rate(initial_lr, optimizer, num_iterations, decreased_by, adjust_lr_every):
+    def adjust_learning_rate(
+        initial_lr, optimizer, num_iterations, decreased_by, adjust_lr_every
+    ):
         lr = initial_lr * ((1 / decreased_by) ** (num_iterations // adjust_lr_every))
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
@@ -47,7 +49,9 @@ def reconstruct(
     for e in range(num_iterations):
 
         decoder.eval()
-        sdf_data = deep_sdf.data.unpack_sdf_samples_from_ram(test_sdf, num_samples).cuda()
+        sdf_data = deep_sdf.data.unpack_sdf_samples_from_ram(
+            test_sdf, num_samples
+        ).cuda()
         xyz = sdf_data[:, 0:3]
         sdf_gt = sdf_data[:, 3].unsqueeze(1)
 
@@ -87,29 +91,38 @@ def reconstruct(
 if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser(
-        description="Use a trained DeepSDF decoder to reconstruct a shape given SDF samples."
+        description="Use a trained DeepSDF decoder to reconstruct a shape given SDF "
+        + "samples."
     )
     arg_parser.add_argument(
         "--experiment",
         "-e",
         dest="experiment_directory",
         required=True,
-        help="The experiment directory which includes specifications and saved model files to use "
-        + "for reconstruction",
+        help="The experiment directory which includes specifications and saved model "
+        + "files to use for reconstruction",
     )
     arg_parser.add_argument(
         "--checkpoint",
         "-c",
         dest="checkpoint",
         default="latest",
-        help='The checkpoint weights to use. This can be a number indicated an epoch or "latest" '
-        + "for the latest weights (this is the default)",
+        help="The checkpoint weights to use. This can be a number indicated an epoch "
+        + "or 'latest' for the latest weights (this is the default)",
     )
     arg_parser.add_argument(
-        "--data", "-d", dest="data_source", required=True, help="The data source directory."
+        "--data",
+        "-d",
+        dest="data_source",
+        required=True,
+        help="The data source directory.",
     )
     arg_parser.add_argument(
-        "--split", "-s", dest="split_filename", required=True, help="The split to reconstruct."
+        "--split",
+        "-s",
+        dest="split_filename",
+        required=True,
+        help="The split to reconstruct.",
     )
     arg_parser.add_argument(
         "--iters",
@@ -155,7 +168,9 @@ if __name__ == "__main__":
     decoder = torch.nn.DataParallel(decoder)
 
     saved_model_state = torch.load(
-        os.path.join(args.experiment_directory, ws.model_params_subdir, args.checkpoint + ".pth")
+        os.path.join(
+            args.experiment_directory, ws.model_params_subdir, args.checkpoint + ".pth"
+        )
     )
     saved_model_epoch = saved_model_state["epoch"]
 
@@ -184,11 +199,15 @@ if __name__ == "__main__":
     if not os.path.isdir(reconstruction_dir):
         os.makedirs(reconstruction_dir)
 
-    reconstruction_meshes_dir = os.path.join(reconstruction_dir, ws.reconstruction_meshes_subdir)
+    reconstruction_meshes_dir = os.path.join(
+        reconstruction_dir, ws.reconstruction_meshes_subdir
+    )
     if not os.path.isdir(reconstruction_meshes_dir):
         os.makedirs(reconstruction_meshes_dir)
 
-    reconstruction_codes_dir = os.path.join(reconstruction_dir, ws.reconstruction_codes_subdir)
+    reconstruction_codes_dir = os.path.join(
+        reconstruction_dir, ws.reconstruction_codes_subdir
+    )
     if not os.path.isdir(reconstruction_codes_dir):
         os.makedirs(reconstruction_codes_dir)
 
@@ -214,7 +233,9 @@ if __name__ == "__main__":
                 )
             else:
                 mesh_filename = os.path.join(reconstruction_meshes_dir, npz[:-4])
-                latent_filename = os.path.join(reconstruction_codes_dir, npz[:-4] + ".pth")
+                latent_filename = os.path.join(
+                    reconstruction_codes_dir, npz[:-4] + ".pth"
+                )
 
             if (
                 args.skip

@@ -4,9 +4,7 @@
 
 #include <random>
 
-std::vector<Eigen::Vector3f> EquiDistPointsOnSphere(const uint numSamples,
-                                                    const float radius) {
-
+std::vector<Eigen::Vector3f> EquiDistPointsOnSphere(const uint numSamples, const float radius) {
   std::vector<Eigen::Vector3f> points(numSamples);
   const float offset = 2.f / numSamples;
 
@@ -27,8 +25,7 @@ std::vector<Eigen::Vector3f> EquiDistPointsOnSphere(const uint numSamples,
   return points;
 }
 
-std::vector<Eigen::Vector4f>
-ValidPointsFromIm(const pangolin::Image<Eigen::Vector4f> &verts) {
+std::vector<Eigen::Vector4f> ValidPointsFromIm(const pangolin::Image<Eigen::Vector4f>& verts) {
   std::vector<Eigen::Vector4f> points;
   Eigen::Vector4f v;
 
@@ -44,10 +41,11 @@ ValidPointsFromIm(const pangolin::Image<Eigen::Vector4f> &verts) {
   return points;
 }
 
-std::vector<Eigen::Vector4f>
-ValidPointsAndTrisFromIm(const pangolin::Image<Eigen::Vector4f> &pixNorms,
-                         std::vector<Eigen::Vector4f> &tris, int &totalObs,
-                         int &wrongObs) {
+std::vector<Eigen::Vector4f> ValidPointsAndTrisFromIm(
+    const pangolin::Image<Eigen::Vector4f>& pixNorms,
+    std::vector<Eigen::Vector4f>& tris,
+    int& totalObs,
+    int& wrongObs) {
   std::vector<Eigen::Vector4f> points;
   Eigen::Vector4f n;
 
@@ -76,8 +74,7 @@ ValidPointsAndTrisFromIm(const pangolin::Image<Eigen::Vector4f> &pixNorms,
   return points;
 }
 
-float TriangleArea(const Eigen::Vector3f &a, const Eigen::Vector3f &b,
-                   const Eigen::Vector3f &c) {
+float TriangleArea(const Eigen::Vector3f& a, const Eigen::Vector3f& b, const Eigen::Vector3f& c) {
   const Eigen::Vector3f ab = b - a;
   const Eigen::Vector3f ac = c - a;
 
@@ -93,9 +90,10 @@ float TriangleArea(const Eigen::Vector3f &a, const Eigen::Vector3f &b,
   return 0.5f * ab.norm() * ac.norm() * sinTheta;
 }
 
-Eigen::Vector3f SamplePointFromTriangle(const Eigen::Vector3f &a,
-                                        const Eigen::Vector3f &b,
-                                        const Eigen::Vector3f &c) {
+Eigen::Vector3f SamplePointFromTriangle(
+    const Eigen::Vector3f& a,
+    const Eigen::Vector3f& b,
+    const Eigen::Vector3f& c) {
   std::random_device seeder;
   std::mt19937 generator(seeder());
   std::uniform_real_distribution<float> rand_dist(0.0, 1.0);
@@ -103,29 +101,28 @@ Eigen::Vector3f SamplePointFromTriangle(const Eigen::Vector3f &a,
   const float r1 = rand_dist(generator);
   const float r2 = rand_dist(generator);
 
-  return Eigen::Vector3f((1 - std::sqrt(r1)) * a +
-                         std::sqrt(r1) * (1 - r2) * b + r2 * std::sqrt(r1) * c);
+  return Eigen::Vector3f(
+      (1 - std::sqrt(r1)) * a + std::sqrt(r1) * (1 - r2) * b + r2 * std::sqrt(r1) * c);
 }
 
 // TODO: duplicated w/ below
-std::pair<Eigen::Vector3f, float>
-ComputeNormalizationParameters(pangolin::Geometry &geom, const float buffer) {
+std::pair<Eigen::Vector3f, float> ComputeNormalizationParameters(
+    pangolin::Geometry& geom,
+    const float buffer) {
+  float xMin = 1000000, xMax = -1000000, yMin = 1000000, yMax = -1000000, zMin = 1000000,
+        zMax = -1000000;
 
-  float xMin = 1000000, xMax = -1000000, yMin = 1000000, yMax = -1000000,
-        zMin = 1000000, zMax = -1000000;
-
-  pangolin::Image<float> vertices = pangolin::get<pangolin::Image<float>>(
-      geom.buffers["geometry"].attributes["vertex"]);
+  pangolin::Image<float> vertices =
+      pangolin::get<pangolin::Image<float>>(geom.buffers["geometry"].attributes["vertex"]);
 
   const std::size_t numVertices = vertices.h;
 
   ///////// Only consider vertices that were used in some face
   std::vector<unsigned char> verticesUsed(numVertices, 0);
   // turn to true if the vertex is used
-  for (const auto &object : geom.objects) {
+  for (const auto& object : geom.objects) {
     auto itVertIndices = object.second.attributes.find("vertex_indices");
     if (itVertIndices != object.second.attributes.end()) {
-
       pangolin::Image<uint32_t> ibo =
           pangolin::get<pangolin::Image<uint32_t>>(itVertIndices->second);
 
@@ -151,8 +148,7 @@ ComputeNormalizationParameters(pangolin::Geometry &geom, const float buffer) {
     zMax = fmax(zMax, vertices(2, i));
   }
 
-  const Eigen::Vector3f center((xMax + xMin) / 2.0f, (yMax + yMin) / 2.0f,
-                               (zMax + zMin) / 2.0f);
+  const Eigen::Vector3f center((xMax + xMin) / 2.0f, (yMax + yMin) / 2.0f, (zMax + zMin) / 2.0f);
 
   // make the mean zero
   float maxDistance = -1.0f;
@@ -161,8 +157,7 @@ ComputeNormalizationParameters(pangolin::Geometry &geom, const float buffer) {
     if (verticesUsed[i] == false)
       continue;
 
-    const float dist =
-        (Eigen::Map<Eigen::Vector3f>(vertices.RowPtr(i)) - center).norm();
+    const float dist = (Eigen::Map<Eigen::Vector3f>(vertices.RowPtr(i)) - center).norm();
     maxDistance = std::max(maxDistance, dist);
   }
 
@@ -172,23 +167,24 @@ ComputeNormalizationParameters(pangolin::Geometry &geom, const float buffer) {
   return {-1 * center, (1.f / maxDistance)};
 }
 
-float BoundingCubeNormalization(pangolin::Geometry &geom, bool fitToUnitSphere,
-                                const float buffer) {
-  float xMin = 1000000, xMax = -1000000, yMin = 1000000, yMax = -1000000,
-        zMin = 1000000, zMax = -1000000;
+float BoundingCubeNormalization(
+    pangolin::Geometry& geom,
+    bool fitToUnitSphere,
+    const float buffer) {
+  float xMin = 1000000, xMax = -1000000, yMin = 1000000, yMax = -1000000, zMin = 1000000,
+        zMax = -1000000;
 
-  pangolin::Image<float> vertices = pangolin::get<pangolin::Image<float>>(
-      geom.buffers["geometry"].attributes["vertex"]);
+  pangolin::Image<float> vertices =
+      pangolin::get<pangolin::Image<float>>(geom.buffers["geometry"].attributes["vertex"]);
 
   const std::size_t numVertices = vertices.h;
 
   ///////// Only consider vertices that were used in some face
   std::vector<unsigned char> verticesUsed(numVertices, 0);
   // turn to true if the vertex is used
-  for (const auto &object : geom.objects) {
+  for (const auto& object : geom.objects) {
     auto itVertIndices = object.second.attributes.find("vertex_indices");
     if (itVertIndices != object.second.attributes.end()) {
-
       pangolin::Image<uint32_t> ibo =
           pangolin::get<pangolin::Image<uint32_t>>(itVertIndices->second);
 

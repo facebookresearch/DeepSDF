@@ -31,9 +31,7 @@ def filter_classes_regex(patterns, classes):
     passed_classes = set()
     for pattern in patterns:
         regex = re.compile(pattern)
-        passed_classes = passed_classes.union(
-            set(filter(regex.match, classes))
-        )
+        passed_classes = passed_classes.union(set(filter(regex.match, classes)))
 
     return list(passed_classes)
 
@@ -49,13 +47,7 @@ def filter_classes(patterns, classes):
 
 def process_mesh(mesh_filepath, target_filepath, executable, additional_args):
     logging.info(mesh_filepath + " --> " + target_filepath)
-    command = [
-        executable,
-        "-m",
-        mesh_filepath,
-        "-o",
-        target_filepath,
-    ] + additional_args
+    command = [executable, "-m", mesh_filepath, "-o", target_filepath] + additional_args
 
     subproc = subprocess.Popen(command, stdout=subprocess.DEVNULL)
     subproc.wait()
@@ -90,7 +82,8 @@ if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
-        description="Pre-processes data from a data source and append the results to a dataset.",
+        description="Pre-processes data from a data source and append the results to "
+        + "a dataset.",
     )
     arg_parser.add_argument(
         "--data_dir",
@@ -111,7 +104,8 @@ if __name__ == "__main__":
         "-n",
         dest="source_name",
         default=None,
-        help="The name to use for the data source. If unspecified, it defaults to the directory name.",
+        help="The name to use for the data source. If unspecified, it defaults to the "
+        + "directory name.",
     )
     arg_parser.add_argument(
         "--split",
@@ -205,10 +199,7 @@ if __name__ == "__main__":
         instance_dirs = class_directories[class_dir]
 
         logging.debug(
-            "Processing "
-            + str(len(instance_dirs))
-            + " instances of class "
-            + class_dir
+            "Processing " + str(len(instance_dirs)) + " instances of class " + class_dir
         )
 
         target_dir = os.path.join(dest_dir, class_dir)
@@ -220,9 +211,7 @@ if __name__ == "__main__":
 
             shape_dir = os.path.join(class_path, instance_dir)
 
-            processed_filepath = os.path.join(
-                target_dir, instance_dir + extension
-            )
+            processed_filepath = os.path.join(target_dir, instance_dir + extension)
             if args.skip and os.path.isfile(processed_filepath):
                 logging.debug("skipping " + processed_filepath)
                 continue
@@ -256,9 +245,7 @@ if __name__ == "__main__":
             except deep_sdf.data.NoMeshFileError:
                 logging.warning("No mesh found for instance " + instance_dir)
             except deep_sdf.data.MultipleMeshFileError:
-                logging.warning(
-                    "Multiple meshes found for instance " + instance_dir
-                )
+                logging.warning("Multiple meshes found for instance " + instance_dir)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=int(args.num_threads)

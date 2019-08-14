@@ -67,7 +67,7 @@ def load_logs(experiment_directory, type):
         ax.set(xlabel="Epoch", ylabel="Magnitude", title="Latent Vector Magnitude")
 
     elif type == "param_mag":
-        for name, mags in logs["param_magnitude"].items():
+        for _name, mags in logs["param_magnitude"].items():
             ax.plot(mags)
         ax.set(xlabel="Epoch", ylabel="Magnitude", title="Parameter Magnitude")
         ax.legend(logs["param_magnitude"].keys())
@@ -89,8 +89,9 @@ if __name__ == "__main__":
         "-e",
         dest="experiment_directory",
         required=True,
-        help="The experiment directory. This directory should include experiment specifications in "
-        + "'specs.json', and logging will be done in this directory as well",
+        help="The experiment directory. This directory should include experiment "
+        + "specifications in 'specs.json', and logging will be done in this directory "
+        + "as well",
     )
     arg_parser.add_argument("--type", "-t", dest="type", default="loss")
 

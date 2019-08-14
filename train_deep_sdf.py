@@ -7,7 +7,6 @@ import signal
 import sys
 import os
 import logging
-import math
 import numpy as np
 import json
 import time
@@ -198,7 +197,7 @@ def clip_logs(loss_log, lr_log, timing_log, lat_mag_log, param_mag_log, epoch):
 def get_spec_with_default(specs, key, default):
     try:
         return specs[key]
-    except:
+    except KeyError:
         return default
 
 
@@ -213,7 +212,7 @@ def append_parameter_magnitudes(param_mag_log, model):
     for name, param in model.named_parameters():
         if len(name) > 7 and name[:7] == "module.":
             name = name[7:]
-        if not name in param_mag_log.keys():
+        if name not in param_mag_log.keys():
             param_mag_log[name] = []
         param_mag_log[name].append(param.data.norm().item())
 
@@ -250,7 +249,7 @@ def main_function(experiment_directory, continue_from, batch_split):
     lr_schedules = get_learning_rate_schedules(specs)
 
     grad_clip = get_spec_with_default(specs, "GradientClipNorm", None)
-    if not grad_clip is None:
+    if grad_clip is not None:
         logging.debug("clipping gradients to max norm {}".format(grad_clip))
 
     def save_latest(epoch):
@@ -288,8 +287,6 @@ def main_function(experiment_directory, continue_from, batch_split):
         var = torch.var(lat_mat, 0)
         return mean, var
 
-    target_std = get_spec_with_default(specs, "CodeTargetStdDev", 1.0)
-
     signal.signal(signal.SIGINT, signal_handler)
 
     num_samp_per_scene = specs["SamplesPerScene"]
@@ -311,8 +308,6 @@ def main_function(experiment_directory, continue_from, batch_split):
     code_reg_lambda = get_spec_with_default(specs, "CodeRegularizationLambda", 1e-4)
 
     code_bound = get_spec_with_default(specs, "CodeBound", None)
-
-    data_aug = False
 
     decoder = arch.Decoder(latent_size, **specs["NetworkSpecs"]).cuda()
 
@@ -352,10 +347,12 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     lat_vecs = []
 
-    code_initial_std = target_std
-
     for _i in range(num_scenes):
-        vec = torch.ones(1, latent_size).normal_(0, 0.1).cuda()
+        vec = (
+            torch.ones(1, latent_size)
+            .normal_(0, get_spec_with_default(specs, "CodeInitStdDev", 1.0))
+            .cuda()
+        )
         vec.requires_grad = True
         lat_vecs.append(vec)
 
@@ -385,7 +382,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     start_epoch = 1
 
-    if not continue_from is None:
+    if continue_from is not None:
 
         logging.info('continuing from "{}"'.format(continue_from))
 
@@ -439,7 +436,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             optimizer_all.zero_grad()
 
-            for subbatch in range(batch_split):
+            for _subbatch in range(batch_split):
 
                 # Process the input datag
                 latent_inputs = torch.zeros(0).cuda()
@@ -483,14 +480,14 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             loss_log.append(batch_loss)
 
-            if not grad_clip == None:
+            if grad_clip is not None:
 
                 torch.nn.utils.clip_grad_norm_(decoder.parameters(), grad_clip)
 
             optimizer_all.step()
 
             # Project latent vectors onto sphere
-            if not code_bound is None:
+            if code_bound is not None:
                 deep_sdf.utils.project_vecs_onto_sphere(lat_vecs, code_bound)
 
         end = time.time()
@@ -530,23 +527,26 @@ if __name__ == "__main__":
         "-e",
         dest="experiment_directory",
         required=True,
-        help="The experiment directory. This directory should include experiment specifications in "
-        + '"specs.json", and logging will be done in this directory as well.',
+        help="The experiment directory. This directory should include "
+        + "experiment specifications in 'specs.json', and logging will be "
+        + "done in this directory as well.",
     )
     arg_parser.add_argument(
         "--continue",
         "-c",
         dest="continue_from",
-        help='A snapshot to continue from. This can be "latest" to continue from the latest running '
-        + "snapshot, or an integer corresponding to an epochal snapshot.",
+        help="A snapshot to continue from. This can be 'latest' to continue"
+        + "from the latest running snapshot, or an integer corresponding to "
+        + "an epochal snapshot.",
     )
     arg_parser.add_argument(
         "--batch_split",
         dest="batch_split",
         default=1,
-        help="This splits the batch into separate subbatches which are processed separately, with "
-        + "gradients accumulated across all subbatches. This allows for training with large "
-        + "effective batch sizes in memory constrained environments.",
+        help="This splits the batch into separate subbatches which are "
+        + "processed separately, with gradients accumulated across all "
+        + "subbatches. This allows for training with large effective batch "
+        + "sizes in memory constrained environments.",
     )
 
     deep_sdf.add_common_args(arg_parser)

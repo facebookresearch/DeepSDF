@@ -11,7 +11,9 @@ import torch
 import deep_sdf.utils
 
 
-def create_mesh(decoder, latent_vec, filename, N=256, max_batch=32 ** 3):
+def create_mesh(
+    decoder, latent_vec, filename, N=256, max_batch=32 ** 3, offset=None, scale=None
+):
     start = time.time()
     ply_filename = filename
 
@@ -46,7 +48,10 @@ def create_mesh(decoder, latent_vec, filename, N=256, max_batch=32 ** 3):
         sample_subset = samples[head : min(head + max_batch, num_samples), 0:3].cuda()
 
         samples[head : min(head + max_batch, num_samples), 3] = (
-            deep_sdf.utils.decode_sdf(decoder, latent_vec, sample_subset).squeeze(1).detach().cpu()
+            deep_sdf.utils.decode_sdf(decoder, latent_vec, sample_subset)
+            .squeeze(1)
+            .detach()
+            .cpu()
         )
         head += max_batch
 
@@ -57,12 +62,22 @@ def create_mesh(decoder, latent_vec, filename, N=256, max_batch=32 ** 3):
     print("sampling takes: %f" % (end - start))
 
     convert_sdf_samples_to_ply(
-        sdf_values.data.cpu(), voxel_origin, voxel_size, ply_filename + ".ply"
+        sdf_values.data.cpu(),
+        voxel_origin,
+        voxel_size,
+        ply_filename + ".ply",
+        offset,
+        scale,
     )
 
 
 def convert_sdf_samples_to_ply(
-    pytorch_3d_sdf_tensor, voxel_grid_origin, voxel_size, ply_filename_out
+    pytorch_3d_sdf_tensor,
+    voxel_grid_origin,
+    voxel_size,
+    ply_filename_out,
+    offset=None,
+    scale=None,
 ):
     """
     Convert sdf samples to .ply
@@ -89,6 +104,12 @@ def convert_sdf_samples_to_ply(
     mesh_points[:, 1] = voxel_grid_origin[1] + verts[:, 1]
     mesh_points[:, 2] = voxel_grid_origin[2] + verts[:, 2]
 
+    # apply additional offset and scale
+    if scale is not None:
+        mesh_points = mesh_points / scale
+    if offset is not None:
+        mesh_points = mesh_points - offset
+
     # try writing to the ply file
 
     num_verts = verts.shape[0]
@@ -112,5 +133,7 @@ def convert_sdf_samples_to_ply(
     ply_data.write(ply_filename_out)
 
     logging.debug(
-        "converting to ply format and writing to file took {} s".format(time.time() - start_time)
+        "converting to ply format and writing to file took {} s".format(
+            time.time() - start_time
+        )
     )
