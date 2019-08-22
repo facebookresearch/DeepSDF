@@ -65,11 +65,11 @@ def reconstruct(
 
         inputs = torch.cat([latent_inputs, xyz], 1).cuda()
 
-        pred_sdf = decoder(inputs)
+        pred_sdf = decoder.inference(inputs)
 
         # TODO: why is this needed?
         if e == 0:
-            pred_sdf = decoder(inputs)
+            pred_sdf = decoder.inference(inputs)
 
         pred_sdf = torch.clamp(pred_sdf, -clamp_dist, clamp_dist)
 

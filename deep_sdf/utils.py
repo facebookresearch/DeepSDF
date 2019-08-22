@@ -70,6 +70,6 @@ def decode_sdf(decoder, latent_vector, queries):
         latent_repeat = latent_vector.expand(num_samples, -1)
         inputs = torch.cat([latent_repeat, queries], 1)
 
-    sdf = decoder(inputs)
+    sdf = decoder.inference(inputs)
 
     return sdf
