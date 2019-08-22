@@ -223,7 +223,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     specs = ws.load_experiment_specifications(experiment_directory)
 
-    logging.info("Experiment description: \n" + specs["Description"])
+    logging.info("Experiment description: \n" + ''.join(specs["Description"]))
 
     data_source = specs["DataSource"]
     train_split_file = specs["TrainSplit"]
@@ -313,8 +313,8 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     logging.info("training with {} GPU(s)".format(torch.cuda.device_count()))
 
-    # if torch.cuda.device_count() > 1:
-    decoder = torch.nn.DataParallel(decoder)
+    if torch.cuda.device_count() > 1:
+        decoder = torch.nn.DataParallel(decoder)
 
     num_epochs = specs["NumEpochs"]
     log_frequency = get_spec_with_default(specs, "LogFrequency", 10)
@@ -437,45 +437,20 @@ def main_function(experiment_directory, continue_from, batch_split):
             optimizer_all.zero_grad()
 
             for _subbatch in range(batch_split):
-
-                # Process the input datag
-                latent_inputs = torch.zeros(0).cuda()
+                # Process the input data
                 sdf_data.requires_grad = False
-
-                sdf_data = (sdf_data.cuda()).reshape(
-                    num_samp_per_scene * scene_per_subbatch, 4
-                )
-                xyz = sdf_data[:, 0:3]
-                sdf_gt = sdf_data[:, 3].unsqueeze(1)
-                for ind in indices.numpy():
-                    latent_ind = lat_vecs[ind]
-                    latent_repeat = latent_ind.expand(num_samp_per_scene, -1)
-                    latent_inputs = torch.cat([latent_inputs, latent_repeat], 0)
-                inputs = torch.cat([latent_inputs, xyz], 1)
-
-                if enforce_minmax:
-                    sdf_gt = deep_sdf.utils.threshold_min_max(sdf_gt, min_vec, max_vec)
-
-                if latent_size == 0:
-                    inputs = xyz
+                sdf_data = sdf_data.cuda()
+                lat_vecs_tensor = torch.cat(lat_vecs)
+                lat_vecs_idx = lat_vecs_tensor[indices.numpy()]
 
                 # NN optimization
-
-                pred_sdf = decoder(inputs)
-
-                if enforce_minmax:
-                    pred_sdf = deep_sdf.utils.threshold_min_max(
-                        pred_sdf, min_vec, max_vec
-                    )
-
-                loss = loss_l1(pred_sdf, sdf_gt)
+                pred_sdf, loss_l1, l2_size_loss = decoder(sdf_data, lat_vecs_idx, min_vec, max_vec, enforce_minmax=enforce_minmax)
+                loss = loss_l1.mean()
 
                 if do_code_regularization:
-                    l2_size_loss = latent_size_regul(lat_vecs, indices.numpy())
-                    loss += code_reg_lambda * min(1, epoch / 100) * l2_size_loss
+                    loss += code_reg_lambda * min(1, epoch / 100) * l2_size_loss.mean()
 
                 loss.backward()
-
                 batch_loss += loss.item()
 
             loss_log.append(batch_loss)

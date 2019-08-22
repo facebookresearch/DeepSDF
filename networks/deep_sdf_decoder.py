@@ -4,7 +4,7 @@
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-
+import deep_sdf
 
 class Decoder(nn.Module):
     def __init__(
@@ -70,8 +70,33 @@ class Decoder(nn.Module):
         self.dropout = dropout
         self.th = nn.Tanh()
 
+    def latent_size_regul(self, lat_vecs):
+        latent_loss = lat_vecs.pow(2).mean(1) 
+        return latent_loss
+
+    def forward(self, sdf_data, lat_vecs_idx, min_vec, max_vec, enforce_minmax=True):
+        num_samp_per_scene = sdf_data.shape[1]
+        sdf_data = sdf_data.reshape(-1, 4)
+        xyz = sdf_data[:, 0:3]
+        sdf_gt = sdf_data[:, 3].unsqueeze(1)
+
+        latent_dim = lat_vecs_idx.shape[1]
+        latent_inputs = lat_vecs_idx.repeat(1, num_samp_per_scene).view(-1, latent_dim)
+
+        inputs = torch.cat([latent_inputs, xyz], 1)
+        pred_sdf = self.inference(inputs)
+
+        if enforce_minmax:
+            sdf_gt = deep_sdf.utils.threshold_min_max(sdf_gt, min_vec, max_vec)
+            pred_sdf = deep_sdf.utils.threshold_min_max(
+                pred_sdf, min_vec, max_vec
+            )
+        loss_l1 = torch.abs(pred_sdf - sdf_gt).squeeze(1)
+        loss_l2_size = self.latent_size_regul(lat_vecs_idx)
+        return pred_sdf, loss_l1, loss_l2_size
+
     # input: N x (L+3)
-    def forward(self, input):
+    def inference(self, input):
         xyz = input[:, -3:]
 
         if input.shape[1] > 3 and self.latent_dropout:
@@ -107,3 +132,5 @@ class Decoder(nn.Module):
             x = self.th(x)
 
         return x
+
+
