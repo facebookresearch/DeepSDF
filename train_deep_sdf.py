@@ -480,6 +480,8 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             _subbatch += 1
             if _subbatch == batch_split:
+                _subbatch = 0
+            
                 loss_log.append(batch_loss)
 
                 if grad_clip is not None:
