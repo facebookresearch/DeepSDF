@@ -48,19 +48,6 @@ def configure_logging(args):
         logger.addHandler(file_logger_handler)
 
 
-def threshold_min_max(tensor, min_vec, max_vec):
-    return torch.min(max_vec, torch.max(tensor, min_vec))
-
-
-def project_vecs_onto_sphere(vectors, radius, surface_only=False):
-    for i in range(len(vectors)):
-        v = vectors[i]
-        length = torch.norm(v).detach()
-
-        if surface_only or length.cpu().data.numpy() > radius:
-            vectors[i].data = vectors[i].mul(radius / length)
-
-
 def decode_sdf(decoder, latent_vector, queries):
     num_samples = queries.shape[0]
 

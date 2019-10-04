@@ -146,5 +146,5 @@ pangolin::GlSlProgram GetShaderProgram() {
   program.AddShader(pangolin::GlSlAnnotatedShader, shaderText);
   program.Link();
 
-  return std::move(program);
+  return program;
 }

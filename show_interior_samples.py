@@ -10,10 +10,6 @@ import pypangolin as pango
 
 if __name__ == "__main__":
 
-    if not len(sys.argv) == 2:
-        print("Usage: show_interior_samples.py <npz_file>")
-        sys.exit(1)
-
     npz_filename = sys.argv[1]
 
     data = deep_sdf.data.read_sdf_samples_into_ram(npz_filename)
