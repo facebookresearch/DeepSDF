@@ -36,7 +36,7 @@ The DeepSDF code allows for pre-processing of meshes from multiple datasets and 
     SurfaceSamples/
         <dataset_name>/
             <class_name>/
-                <instance_name>.npz
+                <instance_name>.ply
 ```
 
 Subsets of the unified data source can be reference using split files, which are stored in a simple JSON format. For examples, see `examples/splits/`. 
