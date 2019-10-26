@@ -151,12 +151,13 @@ if __name__ == "__main__":
 
     additional_general_args = []
 
+    deepsdf_dir = os.path.dirname(os.path.abspath(__file__))
     if args.surface_sampling:
-        executable = "bin/SampleVisibleMeshSurface"
+        executable = os.path.join(deepsdf_dir, "bin/SampleVisibleMeshSurface")
         subdir = ws.surface_samples_subdir
         extension = ".ply"
     else:
-        executable = "bin/PreprocessMesh"
+        executable = os.path.join(deepsdf_dir, "bin/PreprocessMesh")
         subdir = ws.sdf_samples_subdir
         extension = ".npz"
 
