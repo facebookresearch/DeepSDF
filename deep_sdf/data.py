@@ -50,7 +50,7 @@ def find_mesh_in_directory(shape_dir):
         glob.iglob(shape_dir + "/*.obj")
     )
     if len(mesh_filenames) == 0:
-        return NoMeshFileError()
+        raise NoMeshFileError()
     elif len(mesh_filenames) > 1:
         raise MultipleMeshFileError()
     return mesh_filenames[0]
