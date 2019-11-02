@@ -297,11 +297,11 @@ int main(int argc, char** argv) {
   CLI::App app{"PreprocessMesh"};
   app.add_option("-m", meshFileName, "Mesh File Name for Reading")->required();
   app.add_flag("-v", vis, "enable visualization");
-  app.add_option("-o", npyFileName, "Save npy pc to here")->required();
-  app.add_option("--ply", plyFileNameOut, "Save ply pc to here");
-  app.add_option("-s", num_sample, "Save ply pc to here");
-  app.add_option("--var", variance, "Set Variance");
-  app.add_flag("--sply", save_ply, "save ply point cloud for visualization");
+  app.add_option("-o", npyFileName, "File name for output .npy or .npz point cloud")->required();
+  app.add_option("--ply", plyFileNameOut, "File name for output .ply point cloud");
+  app.add_option("-s", num_sample, "Number of samples, defaults to 500000");
+  app.add_option("--var", variance, "Point sampling variance, defaults to 0.005");
+  app.add_flag("--sply", save_ply, "Save ply point cloud for visualization");
   app.add_flag("-t", test_flag, "test_flag");
   app.add_option("-n", spatial_samples_npz, "spatial samples from file");
 
