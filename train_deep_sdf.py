@@ -466,7 +466,7 @@ def main_function(experiment_directory, continue_from, batch_split):
         for sdf_data, indices in sdf_loader:
 
             # Process the input data
-            sdf_data = sdf_data.reshape(-1, 4 + 3) # Added 3 extra dimensions to input
+            sdf_data = sdf_data.reshape(-1, 4 + 3) # Added 3 extra dimensions to data
 
             num_sdf_samples = sdf_data.shape[0]
 
@@ -475,12 +475,10 @@ def main_function(experiment_directory, continue_from, batch_split):
             xyz = sdf_data[:, 0:3]
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
             directions = sdf_data[:, 4:] # Added directions
-            surface_vecs = xyz + directions * sdf_gt # Added surface points
 
             # Clamp ground truth
             if enforce_minmax:
-                clamped_norm = torch.clamp(sdf_gt, minT, maxT) # Added clamped norm
-                surface_vecs = (surface_vecs / surface_vecs.norm()) * clamped_norm # Added clamped surface vector
+                sdf_gt = torch.clamp(sdf_gt, minT, maxT)
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
@@ -490,7 +488,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             sdf_gt = torch.chunk(sdf_gt, batch_split)
 
-            surface_vecs = torch.chunk(surface_vecs, batch_split) # Added chunking of surface pts
+            directions = torch.chunk(directions, batch_split) # Added chunking of directions
 
             batch_loss = 0.0
 
@@ -500,17 +498,16 @@ def main_function(experiment_directory, continue_from, batch_split):
 
                 batch_vecs = lat_vecs(indices[i])
 
-                input = torch.cat([batch_vecs, xyz[i], surface_vecs[i]], dim=1) # Added surface pts input
+                input = torch.cat([batch_vecs, xyz[i]], dim=1)
 
                 # NN optimization
-                pred_surface_vec = decoder(input) # Added pred_sdf -> pred_surface_pt
+                pred_direction = decoder(input) # Added pred_sdf -> pred_direction
 
                 # Clamp prediction
-                if enforce_minmax:
-                    clamped_norm = torch.clamp(pred_surface_vec.norm(), minT, maxT) # Added clamping of norm
-                    pred_surface_vec = (pred_surface_vec / pred_surface_vec.norm()) * clamped_norm # Added clamped surface vector
+                # if enforce_minmax:
+                #     pred = torch.clamp(pred, minT, maxT) # Added clamping of norm
 
-                chunk_loss = loss_l1(pred_surface_vec, surface_vecs[i].cuda()) / num_sdf_samples # Added pred_sdf -> pred_surface_pt
+                chunk_loss = loss_l1(pred_direction, directions[i].cuda()) / num_sdf_samples # Added directions
 
                 if do_code_regularization:
                     l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
