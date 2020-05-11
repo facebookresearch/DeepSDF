@@ -14,25 +14,23 @@ import deep_sdf.workspace as ws
 
 def get_instance_filenames(data_source, split):
     npzfiles = []
-    npzfiles += '../data/test_1/test_1.npz' # Added new npz files
-    npzfiles += '../data/test_2/test_2.npz' # Added new npz files
-    npzfiles += '../data/test_3/test_3.npz' # Added new npz files
-    # for dataset in split:
-    #     for class_name in split[dataset]:
-    #         for instance_name in split[dataset][class_name]:
-    #             instance_filename = os.path.join(
-    #                 dataset, class_name, instance_name + ".npz"
-    #             )
-    #             if not os.path.isfile(
-    #                 os.path.join(data_source, ws.sdf_samples_subdir, instance_filename)
-    #             ):
-    #                 # raise RuntimeError(
-    #                 #     'Requested non-existent file "' + instance_filename + "'"
-    #                 # )
-    #                 logging.warning(
-    #                     "Requested non-existent file '{}'".format(instance_filename)
-    #                 )
-    #             npzfiles += [instance_filename]
+    # Split is a .json file of the training or test dataset (see file of specs.json/TrainSplit)
+    for dataset in split:
+        for class_name in split[dataset]:
+            for instance_name in split[dataset][class_name]:
+                instance_filename = os.path.join(
+                    dataset, class_name, instance_name + ".npz"
+                )
+                if not os.path.isfile(
+                    os.path.join(data_source, ws.sdf_samples_subdir, instance_filename)
+                ):
+                    # raise RuntimeError(
+                    #     'Requested non-existent file "' + instance_filename + "'"
+                    # )
+                    logging.warning(
+                        "Requested non-existent file '{}'".format(instance_filename)
+                    )
+                npzfiles += [instance_filename]
     return npzfiles
 
 
@@ -147,8 +145,7 @@ class SDFSamples(torch.utils.data.Dataset):
         if load_ram:
             self.loaded_data = []
             for f in self.npyfiles:
-                # filename = os.path.join(self.data_source, ws.sdf_samples_subdir, f)
-                filename = os.path.join('../data', f[:-4], f) # Added new filename
+                filename = os.path.join(self.data_source, ws.sdf_samples_subdir, f)
                 npz = np.load(filename)
                 pos_tensor = remove_nans(torch.from_numpy(npz["pos"]))
                 neg_tensor = remove_nans(torch.from_numpy(npz["neg"]))
@@ -163,10 +160,9 @@ class SDFSamples(torch.utils.data.Dataset):
         return len(self.npyfiles)
 
     def __getitem__(self, idx):
-        # filename = os.path.join(
-        #     self.data_source, ws.sdf_samples_subdir, self.npyfiles[idx]
-        # )
-        filename = os.path.join('../data', self.npyfiles[idx][:-4], self.npyfiles[idx]) # Added new filename
+        filename = os.path.join(
+            self.data_source, ws.sdf_samples_subdir, self.npyfiles[idx]
+        )
         if self.load_ram:
             return (
                 unpack_sdf_samples_from_ram(self.loaded_data[idx], self.subsample),
