@@ -14,6 +14,7 @@ import deep_sdf.workspace as ws
 
 def get_instance_filenames(data_source, split):
     npzfiles = []
+    # Split is a .json file of the training or test dataset (see file of specs.json/TrainSplit)
     for dataset in split:
         for class_name in split[dataset]:
             for instance_name in split[dataset][class_name]:

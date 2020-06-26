@@ -25,7 +25,8 @@ class Decoder(nn.Module):
         def make_sequence():
             return []
 
-        dims = [latent_size + 3] + dims + [1]
+        # dims is an array of dimensions where dims[i] is the number of nodes at layer i
+        dims = [latent_size + 3] + dims + [1 + 2] # Added last layer to have extra 2 nodes
 
         self.num_layers = len(dims)
         self.norm_layers = norm_layers
@@ -54,6 +55,7 @@ class Decoder(nn.Module):
             else:
                 setattr(self, "lin" + str(layer), nn.Linear(dims[layer], out_dim))
 
+            # Not applying weight norm but want to apply some form of normalization on this layer -> Apply layer norm
             if (
                 (not weight_norm)
                 and self.norm_layers is not None
@@ -92,6 +94,7 @@ class Decoder(nn.Module):
             if layer == self.num_layers - 2 and self.use_tanh:
                 x = self.tanh(x)
             if layer < self.num_layers - 2:
+                # If this layer uses layer norm
                 if (
                     self.norm_layers is not None
                     and layer in self.norm_layers

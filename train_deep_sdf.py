@@ -3,6 +3,7 @@
 
 import torch
 import torch.utils.data as data_utils
+import numpy as np # Added import
 import signal
 import sys
 import os
@@ -247,6 +248,11 @@ def append_parameter_magnitudes(param_mag_log, model):
             param_mag_log[name] = []
         param_mag_log[name].append(param.data.norm().item())
 
+def unit_direction_to_spherical(xyz):
+    xy = xyz[:, 0] ** 2 + xyz[:, 1] ** 2
+    theta = np.arctan2(np.sqrt(xy), xyz[:, 2]).unsqueeze(1) # for elevation angle defined from Z-axis down
+    phi = np.arctan2(xyz[:, 1], xyz[:, 0]).unsqueeze(1)
+    return np.hstack((theta, phi))
 
 def main_function(experiment_directory, continue_from, batch_split):
 
@@ -459,10 +465,13 @@ def main_function(experiment_directory, continue_from, batch_split):
 
         adjust_learning_rate(lr_schedules, optimizer_all, epoch)
 
+        # sdf_data = [pos_sample, neg_sample] where pos_sample = SamplesPerScene X 4 matrix
+        # indices = current z value (indexes into a specific .npz file containing N X 4 sample matrix, we subsample the N to get sdf_data)
+        # iterate over z values (sdf_data is all the samples for a z value)
         for sdf_data, indices in sdf_loader:
 
             # Process the input data
-            sdf_data = sdf_data.reshape(-1, 4)
+            sdf_data = sdf_data.reshape(-1, 4 + 3) # Added 3 extra dimensions to data
 
             num_sdf_samples = sdf_data.shape[0]
 
@@ -470,9 +479,15 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             xyz = sdf_data[:, 0:3]
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
+            directions = sdf_data[:, 4:] # Added directions
 
-            if enforce_minmax:
-                sdf_gt = torch.clamp(sdf_gt, minT, maxT)
+            theta_phi = unit_direction_to_spherical(directions) # Added theta phi
+
+            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
+
+            # # Clamp ground truth
+            # if enforce_minmax:
+            #     sdf_gt = torch.clamp(sdf_gt, minT, maxT)
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
@@ -480,7 +495,7 @@ def main_function(experiment_directory, continue_from, batch_split):
                 batch_split,
             )
 
-            sdf_gt = torch.chunk(sdf_gt, batch_split)
+            ground_truth = torch.chunk(ground_truth, batch_split) # Added sdf_gt -> ground_truth
 
             batch_loss = 0.0
 
@@ -493,12 +508,13 @@ def main_function(experiment_directory, continue_from, batch_split):
                 input = torch.cat([batch_vecs, xyz[i]], dim=1)
 
                 # NN optimization
-                pred_sdf = decoder(input)
+                pred = decoder(input) # Added pred_sdf -> pred
 
-                if enforce_minmax:
-                    pred_sdf = torch.clamp(pred_sdf, minT, maxT)
+                # Clamp prediction
+                # if enforce_minmax:
+                #     pred = torch.clamp(pred, minT, maxT) # Added clamping of norm
 
-                chunk_loss = loss_l1(pred_sdf, sdf_gt[i].cuda()) / num_sdf_samples
+                chunk_loss = loss_l1(pred, ground_truth[i].cuda()) / num_sdf_samples # Added directions
 
                 if do_code_regularization:
                     l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
