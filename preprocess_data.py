@@ -237,7 +237,7 @@ if __name__ == "__main__":
 
                 meshes_targets_and_specific_args.append(
                     (
-                        os.path.join(shape_dir, mesh_filename),
+                        mesh_filename,
                         processed_filepath,
                         specific_args,
                     )

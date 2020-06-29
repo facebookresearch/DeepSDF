@@ -153,6 +153,17 @@ Before evaluating a DeepSDF model, a second mesh preprocessing step is required 
 python evaluate.py -e <experiment_directory> -d <data_directory> --split <split_filename>
 ```
 
+### Preprocessing the dataset
+Instead of manual dependency installation, you can use prepared docker image:
+```bash
+$ docker build -t sdfdata .
+$ docker run --rm -it \
+    -v <path-to-dataset>/ShapeNetCore.v2/:/usr/src/sdf/data/ShapeNetCore.v2/ \
+    -v <path-to-output>/ShapeNetCore.v2-DeepSDF:/usr/src/sdf/data/ShapeNetCore.v2-DeepSDF/ \
+    --gpus all \ # optional argument if you have nvidia card
+    sdfdata
+```
+
 ##### Note on Table 3 from the CVPR '19 Paper
 
 Given the stochastic nature of shape reconstruction (shapes are reconstructed via gradient descent with a random initialization), reconstruction accuracy will vary across multiple reruns of the same shape. The metrics listed in Table 3 for the "chair" and "plane" are the result of performing two reconstructions of each shape and keeping the one with the lowest chamfer distance. The code as released does not support this evaluation and thus the reproduced results will likely differ from those produced in the paper. For example, our test run with the provided code produced Chamfer distance (multiplied by 10<sup>3</sup>) mean and median of 0.157 and 0.062 respectively for the "chair" class and 0.101 and 0.044 for the "plane" class (compared to 0.204, 0.072 for chairs and 0.143, 0.036 for planes reported in the paper). 
