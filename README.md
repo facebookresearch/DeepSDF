@@ -164,6 +164,22 @@ $ docker run --rm -it \
     sdfdata
 ```
 
+Processed samples quantities:
+
+| class | \# num of output samples | \# num of samples in json files | split
+| ---- | ---- | ---- | --- |
+|  02691156 | 1512 | 1780 | train |
+|  02691156 | 456 | 300 | test |
+| 03001627 | 3859 | 3281 | train |
+| 03001627 | 832 | 779 | test |
+| 03636649 | 897 | 1039 | train | 
+| 03636649 | 196 | 213 | test | 
+| 04256520 | 1906 |  1628 | train |
+| 04256520 | 378 |  411 | test |
+| 04379243 |  5544 |  4859 | train | 
+| 04379243 |  1109 |  1216 | test | 
+
+
 ##### Note on Table 3 from the CVPR '19 Paper
 
 Given the stochastic nature of shape reconstruction (shapes are reconstructed via gradient descent with a random initialization), reconstruction accuracy will vary across multiple reruns of the same shape. The metrics listed in Table 3 for the "chair" and "plane" are the result of performing two reconstructions of each shape and keeping the one with the lowest chamfer distance. The code as released does not support this evaluation and thus the reproduced results will likely differ from those produced in the paper. For example, our test run with the provided code produced Chamfer distance (multiplied by 10<sup>3</sup>) mean and median of 0.157 and 0.062 respectively for the "chair" class and 0.101 and 0.044 for the "plane" class (compared to 0.204, 0.072 for chairs and 0.143, 0.036 for planes reported in the paper). 
