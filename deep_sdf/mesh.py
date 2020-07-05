@@ -45,7 +45,9 @@ def create_mesh(
     head = 0
 
     while head < num_samples:
-        sample_subset = samples[head : min(head + max_batch, num_samples), 0:3].cuda()
+        sample_subset = samples[head : min(head + max_batch, num_samples), 0:3]
+        if torch.cuda.is_available():
+            sample_subset = sample_subset.cuda()
 
         samples[head : min(head + max_batch, num_samples), 3] = (
             deep_sdf.utils.decode_sdf(decoder, latent_vec, sample_subset)

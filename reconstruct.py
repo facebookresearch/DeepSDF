@@ -35,9 +35,11 @@ def reconstruct(
     adjust_lr_every = int(num_iterations / 2)
 
     if type(stat) == type(0.1):
-        latent = torch.ones(1, latent_size).normal_(mean=0, std=stat).cuda()
+        latent = torch.ones(1, latent_size).normal_(mean=0, std=stat)
     else:
-        latent = torch.normal(stat[0].detach(), stat[1].detach()).cuda()
+        latent = torch.normal(stat[0].detach(), stat[1].detach())
+    if torch.cuda.is_available():
+        latent = latent.cuda()
 
     latent.requires_grad = True
 
@@ -51,7 +53,9 @@ def reconstruct(
         decoder.eval()
         sdf_data = deep_sdf.data.unpack_sdf_samples_from_ram(
             test_sdf, num_samples
-        ).cuda()
+        )
+        if torch.cuda.is_available():
+            sdf_data = sdf_data.cuda()
         xyz = sdf_data[:, 0:3]
         sdf_gt = sdf_data[:, 3].unsqueeze(1)
 
@@ -63,7 +67,9 @@ def reconstruct(
 
         latent_inputs = latent.expand(num_samples, -1)
 
-        inputs = torch.cat([latent_inputs, xyz], 1).cuda()
+        inputs = torch.cat([latent_inputs, xyz], 1)
+        if torch.cuda.is_available():
+            inputs = inputs.cuda()
 
         pred_sdf = decoder(inputs)
 
@@ -143,7 +149,9 @@ if __name__ == "__main__":
     deep_sdf.configure_logging(args)
 
     def empirical_stat(latent_vecs, indices):
-        lat_mat = torch.zeros(0).cuda()
+        lat_mat = torch.zeros(0)
+        if torch.cuda.is_available():
+            lat_mat = lat_mat.cuda()
         for ind in indices:
             lat_mat = torch.cat([lat_mat, latent_vecs[ind]], 0)
         mean = torch.mean(lat_mat, 0)
@@ -170,13 +178,16 @@ if __name__ == "__main__":
     saved_model_state = torch.load(
         os.path.join(
             args.experiment_directory, ws.model_params_subdir, args.checkpoint + ".pth"
-        )
+        ),
+        map_location='cpu' if not torch.cuda.is_available() else None
     )
     saved_model_epoch = saved_model_state["epoch"]
 
     decoder.load_state_dict(saved_model_state["model_state_dict"])
 
-    decoder = decoder.module.cuda()
+    decoder = decoder.module
+    if torch.cuda.is_available():
+        decoder = decoder.cuda()
 
     with open(args.split_filename, "r") as f:
         split = json.load(f)
