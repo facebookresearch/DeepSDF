@@ -29,6 +29,23 @@ def get_instance_filenames(data_source, split):
                     logging.warning(
                         "Requested non-existent file '{}'".format(instance_filename)
                     )
+                    continue
+                npz = np.load(
+                        os.path.join(
+                            data_source,
+                            ws.sdf_samples_subdir,
+                            instance_filename))
+                try:
+                    logging.debug(npz['pos'])
+                    logging.debug(npz['neg'])
+                except KeyError:
+                    logging.warning(
+                            "Requested file with missing data '{}'".format(
+                            instance_filename)
+                    )
+                    continue
+                finally:
+                    npz.close()
                 npzfiles += [instance_filename]
     return npzfiles
 

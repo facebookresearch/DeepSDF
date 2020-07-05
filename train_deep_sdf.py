@@ -305,7 +305,9 @@ def main_function(experiment_directory, continue_from, batch_split):
             param_group["lr"] = lr_schedules[i].get_learning_rate(epoch)
 
     def empirical_stat(latent_vecs, indices):
-        lat_mat = torch.zeros(0).cuda()
+        lat_mat = torch.zeros(0)
+        if torch.cuda.is_available():
+            lat_mat = lat_mat.cuda()
         for ind in indices:
             lat_mat = torch.cat([lat_mat, latent_vecs[ind]], 0)
         mean = torch.mean(lat_mat, 0)
@@ -326,9 +328,13 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     code_bound = get_spec_with_default(specs, "CodeBound", None)
 
-    decoder = arch.Decoder(latent_size, **specs["NetworkSpecs"]).cuda()
+    decoder = arch.Decoder(latent_size, **specs["NetworkSpecs"])
+    if torch.cuda.is_available():
+        decoder = decoder.cuda()
 
-    logging.info("training with {} GPU(s)".format(torch.cuda.device_count()))
+    if torch.cuda.is_available():
+        logging.info("training with {} GPU(s)".format(
+            torch.cuda.device_count()))
 
     # if torch.cuda.device_count() > 1:
     decoder = torch.nn.DataParallel(decoder)
@@ -498,16 +504,17 @@ def main_function(experiment_directory, continue_from, batch_split):
                 if enforce_minmax:
                     pred_sdf = torch.clamp(pred_sdf, minT, maxT)
 
-                chunk_loss = loss_l1(pred_sdf, sdf_gt[i].cuda()) / num_sdf_samples
-
+                chunk_loss = loss_l1(pred_sdf, sdf_gt[i]) / num_sdf_samples
                 if do_code_regularization:
                     l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
                     reg_loss = (
                         code_reg_lambda * min(1, epoch / 100) * l2_size_loss
                     ) / num_sdf_samples
 
-                    chunk_loss = chunk_loss + reg_loss.cuda()
+                    chunk_loss = chunk_loss + reg_loss
 
+                if torch.cuda.is_available():
+                    chunk_loss = chunk_loss.cuda()
                 chunk_loss.backward()
 
                 batch_loss += chunk_loss.item()
