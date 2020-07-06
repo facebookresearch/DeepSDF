@@ -254,7 +254,10 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     specs = ws.load_experiment_specifications(experiment_directory)
 
-    logging.info("Experiment description: \n" + specs["Description"])
+    description = specs["Description"]
+    if not isinstance(description, (list, tuple)):
+        description = [description]
+    logging.info("Experiment description: \n{}".format("".join(description)))
 
     data_source = specs["DataSource"]
     train_split_file = specs["TrainSplit"]
