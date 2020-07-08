@@ -58,7 +58,9 @@ def build_decoder(experiment_directory, experiment_specs):
 
     latent_size = experiment_specs["CodeLength"]
 
-    decoder = arch.Decoder(latent_size, **experiment_specs["NetworkSpecs"]).cuda()
+    decoder = arch.Decoder(latent_size, **experiment_specs["NetworkSpecs"])
+    if torch.cuda.is_available():
+        decoder = decoder.cuda()
 
     return decoder
 
@@ -97,7 +99,10 @@ def load_latent_vectors(experiment_directory, checkpoint):
 
         lat_vecs = []
         for i in range(num_vecs):
-            lat_vecs.append(data["latent_codes"][i].cuda())
+            d = data["latent_codes"][i]
+            if torch.cuda.is_available():
+                d = d.cuda()
+            lat_vecs.append(d)
 
         return lat_vecs
 
