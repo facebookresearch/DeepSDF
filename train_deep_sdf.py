@@ -465,9 +465,10 @@ def main_function(experiment_directory, continue_from, batch_split):
 
         adjust_learning_rate(lr_schedules, optimizer_all, epoch)
 
-        # sdf_data = [pos_sample, neg_sample] where pos_sample = SamplesPerScene X 4 matrix
-        # indices = current z value (indexes into a specific .npz file containing N X 4 sample matrix, we subsample the N to get sdf_data)
-        # iterate over z values (sdf_data is all the samples for a z value)
+        # sdf_data = [pos_sample, neg_sample] where pos_sample = SamplesPerScene X 7 matrix
+        # indices = current z value(s) in batch 
+            # (indexes into a specific .npz file containing N X 7 sample matrix, we subsample the N to get sdf_data)
+        # iterate over z values (sdf_data is all N samples of a z value)
         for sdf_data, indices in sdf_loader:
 
             # Process the input data
