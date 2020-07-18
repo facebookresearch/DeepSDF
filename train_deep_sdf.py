@@ -482,7 +482,7 @@ def main_function(experiment_directory, continue_from, batch_split):
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
             directions = sdf_data[:, 4:] # Added directions
 
-            theta_phi = unit_direction_to_spherical(directions) # Added theta phi
+            theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi
 
             ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
 
