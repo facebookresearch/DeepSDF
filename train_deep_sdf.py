@@ -255,6 +255,7 @@ def unit_direction_to_spherical(xyz):
     return np.hstack((theta, phi))
 
 def main_function(experiment_directory, continue_from, batch_split):
+    logging.basicConfig(filename=experiment_directory + 'training_log.log', level=logging.INFO)
 
     logging.debug("running " + experiment_directory)
 
