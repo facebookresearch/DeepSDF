@@ -485,11 +485,14 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi
 
-            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
+            # Clamp ground truth sdf
+            if enforce_minmax:
+                sdf_gt = torch.clamp(sdf_gt, minT, maxT)      
 
-            # # Clamp ground truth
-            # if enforce_minmax:
-            #     sdf_gt = torch.clamp(sdf_gt, minT, maxT)
+            # Divide theta_phi by pi to match tanh range of [-1, 1]
+            # theta_phi = theta_phi / np.pi
+
+            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
@@ -513,8 +516,11 @@ def main_function(experiment_directory, continue_from, batch_split):
                 pred = decoder(input) # Added pred_sdf -> pred
 
                 # Clamp prediction
-                # if enforce_minmax:
-                #     pred = torch.clamp(pred, minT, maxT) # Added clamping of norm
+                if enforce_minmax:
+                    pred[:, 0] = torch.clamp(pred[:, 0], minT, maxT) # Added clamping of norm
+
+                # Multiply pred theta_phi by pi (to match tanh output to ground truth)
+                pred[:, 1:] = pred[:, 1:] * np.pi
 
                 chunk_loss = loss_l1(pred, ground_truth[i].cuda()) / num_sdf_samples # Added directions
 

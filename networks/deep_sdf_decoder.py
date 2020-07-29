@@ -106,6 +106,7 @@ class Decoder(nn.Module):
                 if self.dropout is not None and layer in self.dropout:
                     x = F.dropout(x, p=self.dropout_prob, training=self.training)
 
+        # mul spherical by pi
         if hasattr(self, "th"):
             x = self.th(x)
 
