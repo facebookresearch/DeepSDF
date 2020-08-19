@@ -514,17 +514,16 @@ def main_function(experiment_directory, continue_from, batch_split):
 
                     # NN optimization
                     pred = decoder(input) # Added pred_sdf -> pred
-                    pred_clone = pred.clone()
                     
                     # Multiply pred theta_phi by pi (to match tanh output to ground truth)
-                    pred_clone[:, 1:] = pred_clone[:, 1:] * np.pi
+                    pred[:, 1:] = pred[:, 1:] * np.pi
 
                     # Clamp prediction
                     if enforce_minmax:
-                        pred_clone[:, 0] = torch.clamp(pred_clone[:, 0], minT, maxT) # Added clamping of norm
+                        torch.cat([torch.clamp(pred[:, 0], minT, maxT), pred[:, 1:]], dim=1) # Added clamping of norm
 
                     # visualize where errors are coming from
-                    chunk_loss = loss_l1(pred_clone, ground_truth[i].cuda()) / num_sdf_samples # Added directions
+                    chunk_loss = loss_l1(pred, ground_truth[i].cuda()) / num_sdf_samples # Added directions
 
                     if do_code_regularization:
                         l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
