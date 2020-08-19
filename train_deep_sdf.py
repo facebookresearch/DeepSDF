@@ -522,7 +522,7 @@ def main_function(experiment_directory, continue_from, batch_split):
                     if enforce_minmax:
                         temp = torch.clamp(pred[:, 0], minT, maxT)
                         print(temp.shape)
-                        print(pred[:, 1:])
+                        print(pred[:, 1:].shape)
                         pred = torch.cat([temp, pred[:, 1:]], dim=1) # Added clamping of norm
 
                     # visualize where errors are coming from
