@@ -480,7 +480,7 @@ def main_function(experiment_directory, continue_from, batch_split):
             sdf_data.requires_grad = False
 
             good_idx = np.where(np.abs(sdf_data[:, 3]) < 0.1)
-            good_samples = torch.from_numpy(sdf_data[good_idx, :][0])
+            good_samples = sdf_data[good_idx, :][0]
 
             print(good_samples.shape)
 
