@@ -479,9 +479,6 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             sdf_data.requires_grad = False
 
-            good_idx = np.where(np.abs(sdf_data[:, 3]) < 0.1)
-            good_samples = sdf_data[good_idx, :][0]
-
             xyz = good_samples[:, 0:3]
             sdf_gt = good_samples[:, 3].unsqueeze(1)
             directions = good_samples[:, 4:] # Added directions
