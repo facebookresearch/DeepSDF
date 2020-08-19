@@ -482,8 +482,6 @@ def main_function(experiment_directory, continue_from, batch_split):
             good_idx = np.where(np.abs(sdf_data[:, 3]) < 0.1)
             good_samples = sdf_data[good_idx, :][0]
 
-            print(good_samples.shape)
-
             xyz = good_samples[:, 0:3]
             sdf_gt = good_samples[:, 3].unsqueeze(1)
             directions = good_samples[:, 4:] # Added directions
@@ -501,7 +499,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
-                indices.unsqueeze(-1).repeat(1, num_samp_per_scene).view(-1),
+                indices.unsqueeze(-1).repeat(1, num_sdf_samples).view(-1),
                 batch_split,
             )
 
