@@ -507,36 +507,36 @@ def main_function(experiment_directory, continue_from, batch_split):
             optimizer_all.zero_grad()
 
             for i in range(batch_split):
+                with torch.autograd.set_detect_anomaly(True):
+                    batch_vecs = lat_vecs(indices[i])
 
-                batch_vecs = lat_vecs(indices[i])
+                    input = torch.cat([batch_vecs, xyz[i]], dim=1)
 
-                input = torch.cat([batch_vecs, xyz[i]], dim=1)
+                    # NN optimization
+                    pred = decoder(input) # Added pred_sdf -> pred
+                    pred_clone = pred.clone()
+                    
+                    # Multiply pred theta_phi by pi (to match tanh output to ground truth)
+                    pred_clone[:, 1:] = pred_clone[:, 1:] * np.pi
 
-                # NN optimization
-                pred = decoder(input) # Added pred_sdf -> pred
-                pred_clone = pred.clone()
-                
-                # Multiply pred theta_phi by pi (to match tanh output to ground truth)
-                pred_clone[:, 1:] = pred_clone[:, 1:] * np.pi
+                    # Clamp prediction
+                    if enforce_minmax:
+                        pred_clone[:, 0] = torch.clamp(pred_clone[:, 0], minT, maxT) # Added clamping of norm
 
-                # Clamp prediction
-                if enforce_minmax:
-                    pred_clone[:, 0] = torch.clamp(pred_clone[:, 0], minT, maxT) # Added clamping of norm
+                    # visualize where errors are coming from
+                    chunk_loss = loss_l1(pred_clone, ground_truth[i].cuda()) / num_sdf_samples # Added directions
 
-                # visualize where errors are coming from
-                chunk_loss = loss_l1(pred_clone, ground_truth[i].cuda()) / num_sdf_samples # Added directions
+                    if do_code_regularization:
+                        l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
+                        reg_loss = (
+                            code_reg_lambda * min(1, epoch / 100) * l2_size_loss
+                        ) / num_sdf_samples
 
-                if do_code_regularization:
-                    l2_size_loss = torch.sum(torch.norm(batch_vecs, dim=1))
-                    reg_loss = (
-                        code_reg_lambda * min(1, epoch / 100) * l2_size_loss
-                    ) / num_sdf_samples
+                        chunk_loss = chunk_loss + reg_loss.cuda()
 
-                    chunk_loss = chunk_loss + reg_loss.cuda()
+                    chunk_loss.backward()
 
-                chunk_loss.backward()
-
-                batch_loss += chunk_loss.item()
+                    batch_loss += chunk_loss.item()
 
             logging.debug("loss = {}".format(batch_loss))
 
