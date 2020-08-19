@@ -520,7 +520,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
                     # Clamp prediction
                     if enforce_minmax:
-                        torch.cat([torch.clamp(pred[:, 0], minT, maxT), pred[:, 1:]], dim=1) # Added clamping of norm
+                        pred = torch.cat([torch.clamp(pred[:, 0], minT, maxT), pred[:, 1:]], dim=1) # Added clamping of norm
 
                     # visualize where errors are coming from
                     chunk_loss = loss_l1(pred, ground_truth[i].cuda()) / num_sdf_samples # Added directions
