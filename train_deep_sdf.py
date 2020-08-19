@@ -479,9 +479,9 @@ def main_function(experiment_directory, continue_from, batch_split):
 
             sdf_data.requires_grad = False
 
-            xyz = good_samples[:, 0:3]
-            sdf_gt = good_samples[:, 3].unsqueeze(1)
-            directions = good_samples[:, 4:] # Added directions
+            xyz = sdf_data[:, 0:3]
+            sdf_gt = sdf_data[:, 3].unsqueeze(1)
+            directions = sdf_data[:, 4:] # Added directions
 
             theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi
 
