@@ -490,7 +490,7 @@ def main_function(experiment_directory, continue_from, batch_split):
                 sdf_gt = torch.clamp(sdf_gt, minT, maxT)      
 
             # Divide theta_phi by pi to match tanh range of [-1, 1]
-            # theta_phi = theta_phi / np.pi
+            theta_phi = theta_phi / np.pi
 
             ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
 
@@ -516,7 +516,7 @@ def main_function(experiment_directory, continue_from, batch_split):
                     pred = decoder(input) # Added pred_sdf -> pred
                     
                     # Multiply pred theta_phi by pi (to match tanh output to ground truth)
-                    pred[:, 1:] = pred[:, 1:] * np.pi
+                    # pred[:, 1:] = pred[:, 1:] * np.pi
 
                     # Clamp prediction
                     if enforce_minmax:
