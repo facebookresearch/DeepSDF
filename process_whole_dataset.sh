@@ -13,6 +13,20 @@ for cls in "${classes[@]}"; do
         --data_dir data/ShapeNetCore.v2-DeepSDF/ \
         --source data/ShapeNetCore.v2/ \
         --name ShapeNetV2 \
+        --split examples/splits/sv2_${cls}_train.json \
+        --test \
+        --skip
+    python preprocess_data.py \
+        --data_dir data/ShapeNetCore.v2-DeepSDF/ \
+        --source data/ShapeNetCore.v2/ \
+        --name ShapeNetV2 \
+        --split examples/splits/sv2_${cls}_train.json \
+        --surface \
+        --skip
+    python preprocess_data.py \
+        --data_dir data/ShapeNetCore.v2-DeepSDF/ \
+        --source data/ShapeNetCore.v2/ \
+        --name ShapeNetV2 \
         --split examples/splits/sv2_${cls}_test.json \
         --test \
         --skip
