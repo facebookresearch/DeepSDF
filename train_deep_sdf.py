@@ -483,16 +483,16 @@ def main_function(experiment_directory, continue_from, batch_split):
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
             directions = sdf_data[:, 4:] # Added directions
 
-            theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi
+            # theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi changed
 
             # Clamp ground truth sdf
             if enforce_minmax:
                 sdf_gt = torch.clamp(sdf_gt, minT, maxT)      
 
             # Divide theta_phi by pi to match tanh range of [-1, 1]
-            theta_phi = theta_phi / np.pi
+            # theta_phi = theta_phi / np.pi changed
 
-            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
+            ground_truth = torch.cat([sdf_gt, directions], dim=1) # Added ground truth changed
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
@@ -518,6 +518,8 @@ def main_function(experiment_directory, continue_from, batch_split):
                     # Multiply pred theta_phi by pi (to match tanh output to ground truth)
                     # pred[:, 1:] = pred[:, 1:] * np.pi
 
+                    # check if outputs are 0-2pi
+                    
                     # Clamp prediction
                     if enforce_minmax:
                         pred = torch.cat([torch.clamp(pred[:, :1], minT, maxT), pred[:, 1:]], dim=1) # Added clamping of norm
