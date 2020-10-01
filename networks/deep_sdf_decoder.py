@@ -26,7 +26,7 @@ class Decoder(nn.Module):
             return []
 
         # dims is an array of dimensions where dims[i] is the number of nodes at layer i
-        dims = [latent_size + 3] + dims + [1 + 3] # Added last layer to have extra 2 nodes changed
+        dims = [latent_size + 3] + dims + [1 + 2] # Added last layer to have extra 2 nodes
 
         self.num_layers = len(dims)
         self.norm_layers = norm_layers
