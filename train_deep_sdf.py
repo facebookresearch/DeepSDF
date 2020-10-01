@@ -248,11 +248,19 @@ def append_parameter_magnitudes(param_mag_log, model):
             param_mag_log[name] = []
         param_mag_log[name].append(param.data.norm().item())
 
-def unit_direction_to_spherical(xyz):
-    xy = xyz[:, 0] ** 2 + xyz[:, 1] ** 2
-    theta = np.arctan2(np.sqrt(xy), xyz[:, 2]).unsqueeze(1) # for elevation angle defined from Z-axis down
-    phi = np.arctan2(xyz[:, 1], xyz[:, 0]).unsqueeze(1)
-    return np.hstack((theta, phi))
+def cart2sph(X):
+    """
+    Args: X = numpy array of shape (n, 3) where each row is a direction vector [x, y, z]
+    Returns: numpy tensor of shape (n, 3) where each row is a vector in spherical coordinates [r, theta, phi]
+    """  
+    Y = np.zeros(X.shape)
+    xy = X[:, 0] ** 2 + X[:, 1] ** 2
+    Y[:, 0] = np.sqrt(xy + X[:, 2] ** 2) # r
+    Y[:, 1] = np.arccos(X[:, 2] / Y[:, 0]) # theta
+#     Y[:, 1] = np.arctan2(np.sqrt(xy), X[:, 2]) # theta defined from Z-axis down
+#     Y[:, 1] = np.arctan2(xyz[:,2], np.sqrt(xy)) # theta defined from XY-plane up
+    Y[:, 2] = np.arctan2(X[:, 1], X[:, 0]) # phi
+    return Y
 
 def main_function(experiment_directory, continue_from, batch_split):
     logging.basicConfig(filename=experiment_directory + 'training_log.log', level=logging.INFO)
@@ -483,16 +491,17 @@ def main_function(experiment_directory, continue_from, batch_split):
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
             directions = sdf_data[:, 4:] # Added directions
 
-            # theta_phi = torch.from_numpy(unit_direction_to_spherical(directions)) # Added theta phi changed
+            r_theta_phi = torch.from_numpy(cart2sph(directions)) # Added theta phi
+            theta_phi = r_theta_phi[:, 1:]
 
             # Clamp ground truth sdf
             if enforce_minmax:
                 sdf_gt = torch.clamp(sdf_gt, minT, maxT)      
 
             # Divide theta_phi by pi to match tanh range of [-1, 1]
-            # theta_phi = theta_phi / np.pi changed
+            theta_phi = theta_phi / np.pi
 
-            ground_truth = torch.cat([sdf_gt, directions], dim=1) # Added ground truth changed
+            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(
@@ -517,8 +526,6 @@ def main_function(experiment_directory, continue_from, batch_split):
                     
                     # Multiply pred theta_phi by pi (to match tanh output to ground truth)
                     # pred[:, 1:] = pred[:, 1:] * np.pi
-
-                    # check if outputs are 0-2pi
                     
                     # Clamp prediction
                     if enforce_minmax:
