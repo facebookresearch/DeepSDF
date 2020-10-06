@@ -491,7 +491,7 @@ def main_function(experiment_directory, continue_from, batch_split):
             sdf_gt = sdf_data[:, 3].unsqueeze(1)
             directions = sdf_data[:, 4:] # Added directions
 
-            r_theta_phi = torch.from_numpy(cart2sph(directions)) # Added theta phi
+            r_theta_phi = torch.from_numpy(cart2sph(directions)).float() # Added theta phi
             theta_phi = r_theta_phi[:, 1:]
 
             # Clamp ground truth sdf
