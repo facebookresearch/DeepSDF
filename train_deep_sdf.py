@@ -251,7 +251,7 @@ def append_parameter_magnitudes(param_mag_log, model):
 def cart2sph(X):
     """
     Args: X = numpy array of shape (n, 3) where each row is a direction vector [x, y, z]
-    Returns: numpy tensor of shape (n, 3) where each row is a vector in spherical coordinates [r, theta, phi]
+    Returns: numpy array of shape (n, 3) where each row is a vector in spherical coordinates [r, theta, phi]
     """  
     Y = np.zeros(X.shape)
     xy = X[:, 0] ** 2 + X[:, 1] ** 2
