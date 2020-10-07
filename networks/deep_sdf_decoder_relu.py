@@ -118,7 +118,7 @@ class Decoder(nn.Module):
         if hasattr(self, "th"):
             first_slice = x[:, :512]
             second_slice = x[:, 512:]
-            tuple_of_activated_parts = (self.tanh(first_slice), self.relu(second_slice))
+            tuple_of_activated_parts = (self.th(first_slice), self.relu(second_slice))
             x = torch.cat(tuple_of_activated_parts, dim=1)
             # x = self.th(x)
 
