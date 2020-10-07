@@ -91,7 +91,7 @@ class Decoder(nn.Module):
                 x = torch.cat([x, xyz], 1)
             x = lin(x)
             # last layer Tanh
-            if layer == self.num_layers - 2 and self.use_tanh:
+            if layer == self.num_layers - 2 and self.use_tanh: # look here
                 x = self.tanh(x)
             if layer < self.num_layers - 2:
                 # If this layer uses layer norm
