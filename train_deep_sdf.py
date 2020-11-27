@@ -494,14 +494,16 @@ def main_function(experiment_directory, continue_from, batch_split):
             r_theta_phi = torch.from_numpy(cart2sph(directions)).float() # Added theta phi
             theta_phi = r_theta_phi[:, 1:]
 
-            # Clamp ground truth sdf
+            # Divide theta_phi by pi to match tanh range of [-1, 1]
+            # theta_phi = theta_phi / np.pi
+            
+            cos_theta_phi = torch.cos(theta_phi)
+            
             if enforce_minmax:
                 sdf_gt = torch.clamp(sdf_gt, minT, maxT)      
 
-            # Divide theta_phi by pi to match tanh range of [-1, 1]
-            theta_phi = theta_phi / np.pi
 
-            ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
+            ground_truth = torch.cat([sdf_gt, cos_theta_phi], dim=1) # Added ground truth
 
             xyz = torch.chunk(xyz, batch_split)
             indices = torch.chunk(

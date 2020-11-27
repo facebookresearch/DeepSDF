@@ -3,9 +3,9 @@
 	"DataSource" : "/global/scratch/vwang/shape-generation/DeepSDF/data",
 	"TrainSplit" : "/global/scratch/vwang/shape-generation/DeepSDF/examples/splits/vec_test_train.json",
 	"TestSplit" : "/global/scratch/vwang/shape-generation/DeepSDF/examples/splits/vec_test_test.json",
-	"NetworkArch" : "deep_sdf_decoder_relu",
+	"NetworkArch" : "deep_sdf_decoder",
 	"NetworkSpecs" : {
-		"dims" : [ 512, 512, 512, 512, 512, 512, 512, 1024],
+		"dims" : [ 512, 512, 512, 512, 512, 512, 512, 512],
 		"dropout" : [0, 1, 2, 3, 4, 5, 6, 7],
 		"dropout_prob" : 0.2,
 		"norm_layers" : [0, 1, 2, 3, 4, 5, 6, 7],
