@@ -1,0 +1,36 @@
+DeepSdf - INFO - Experiment description: 
+This is a test experiment to see if we can memorize a vector distance function from 3 examples
+DeepSdf - INFO - training with 3 GPU(s)
+DeepSdf - INFO - There are 3 scenes
+DeepSdf - INFO - starting from epoch 1
+DeepSdf - INFO - Number of decoder parameters: 2108925
+DeepSdf - INFO - Number of shape code parameters: 768 (# codes 3, code dim 256)
+DeepSdf - INFO - epoch 1...
+DeepSdf - INFO - epoch 2...
+Traceback (most recent call last):
+  File "/global/scratch/vwang/shape-generation/DeepSDF/train_deep_sdf.py", line 625, in <module>
+    main_function(args.experiment_directory, args.continue_from, int(args.batch_split))
+  File "/global/scratch/vwang/shape-generation/DeepSDF/train_deep_sdf.py", line 525, in main_function
+    pred = decoder(input) # Added pred_sdf -> pred
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/parallel/data_parallel.py", line 155, in forward
+    outputs = self.parallel_apply(replicas, inputs, kwargs)
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/parallel/data_parallel.py", line 165, in parallel_apply
+    return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/parallel/parallel_apply.py", line 85, in parallel_apply
+    output.reraise()
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/_utils.py", line 395, in reraise
+    raise self.exc_type(msg)
+RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/parallel/parallel_apply.py", line 60, in _worker
+    output = module(*input, **kwargs)
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/global/scratch/vwang/shape-generation/DeepSDF/networks/deep_sdf_decoder.py", line 107, in forward
+    x = F.dropout(x, p=self.dropout_prob, training=self.training)
+  File "/global/home/users/vwang/.conda/envs/shape-gen/lib/python3.6/site-packages/torch/nn/functional.py", line 936, in dropout
+    else _VF.dropout(input, p, training))
+RuntimeError: CUDA out of memory. Tried to allocate 2.00 GiB (GPU 0; 23.65 GiB total capacity; 19.71 GiB already allocated; 1.30 GiB free; 21.47 GiB reserved in total by PyTorch)
+
