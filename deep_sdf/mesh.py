@@ -29,8 +29,8 @@ def create_mesh(
     # transform first 3 columns
     # to be the x, y, z index
     samples[:, 2] = overall_index % N
-    samples[:, 1] = (overall_index.long() / N) % N
-    samples[:, 0] = ((overall_index.long() / N) / N) % N
+    samples[:, 1] = (overall_index // N) % N
+    samples[:, 0] = ((overall_index // N) // N) % N
 
     # transform first 3 columns
     # to be the x, y, z coordinate
