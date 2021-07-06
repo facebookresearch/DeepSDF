@@ -254,7 +254,7 @@ def main_function(experiment_directory, continue_from, batch_split):
 
     specs = ws.load_experiment_specifications(experiment_directory)
 
-    logging.info("Experiment description: \n" + specs["Description"])
+    logging.info("Experiment description: \n" + '\n'.join(specs["Description"]))
 
     data_source = specs["DataSource"]
     train_split_file = specs["TrainSplit"]
