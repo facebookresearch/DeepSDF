@@ -1,6 +1,6 @@
 # Originated from https://github.com/phygevs/DeepSDF/blob/master/Dockerfile
 
-FROM nvidia/cudagl:10.2-base-ubuntu18.04
+FROM nvidia/cudagl:11.1-base-ubuntu18.04
 
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -116,10 +116,11 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 # main
 WORKDIR /workspace/DeepSDF
 
-RUN conda install -y -c pytorch \
+RUN conda install -y -c pytorch -c nvidia \
     pytorch \
     torchvision \
-    cpuonly \
+#    cpuonly \
+    cudatoolkit=11.1 \
     scikit-image \
     scipy
 
