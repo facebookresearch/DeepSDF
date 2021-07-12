@@ -248,7 +248,7 @@ def append_parameter_magnitudes(param_mag_log, model):
         param_mag_log[name].append(param.data.norm().item())
 
 
-def main_function(experiment_directory, continue_from, batch_split):
+def main_function(experiment_directory, continue_from, batch_split, load_ram=False):
 
     logging.debug("running " + experiment_directory)
 
@@ -340,7 +340,7 @@ def main_function(experiment_directory, continue_from, batch_split):
         train_split = json.load(f)
 
     sdf_dataset = deep_sdf.data.SDFSamples(
-        data_source, train_split, num_samp_per_scene, load_ram=False
+        data_source, train_split, num_samp_per_scene, load_ram=load_ram
     )
 
     num_data_loader_threads = get_spec_with_default(specs, "DataLoaderThreads", 1)
@@ -581,6 +581,12 @@ if __name__ == "__main__":
         + "subbatches. This allows for training with large effective batch "
         + "sizes in memory constrained environments.",
     )
+    arg_parser.add_argument(
+        "--load_ram",
+        "-r",
+        action='store_true',
+        help="If set, the dataset will be load into RAM (may result in huge RAM consumption)",
+    )
 
     deep_sdf.add_common_args(arg_parser)
 
@@ -588,4 +594,4 @@ if __name__ == "__main__":
 
     deep_sdf.configure_logging(args)
 
-    main_function(args.experiment_directory, args.continue_from, int(args.batch_split))
+    main_function(args.experiment_directory, args.continue_from, int(args.batch_split), args.load_ram)
