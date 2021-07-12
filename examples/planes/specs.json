@@ -1,7 +1,7 @@
 {
   "Description" : [ "This experiment learns a shape representation for planes ",
                     "using data from ShapeNet version 2." ],
-  "DataSource" : "data",
+  "DataSource" : "/workspace/dataset/DeepSDF/data",
   "TrainSplit" : "examples/splits/sv2_planes_train.json",
   "TestSplit" : "examples/splits/sv2_planes_test.json",
   "NetworkArch" : "deep_sdf_decoder",
