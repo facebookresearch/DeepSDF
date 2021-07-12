@@ -8,7 +8,7 @@ ROOT=$(cd $(dirname $0); cd ../; pwd)
 # Set DATASET_DIR if you want mount from other place than DeepSDF/data
 # The directory should be like $DATA_DIR/DeepSDF/data
 # The dataset directory will mount to /workspace/dataset/DeepSDF/data in the container
-if [ -z $DATASET_DIR]; then
+if [ -z $DATASET_DIR ]; then
     DATASET_DIR=$(cd $ROOT; cd ../; pwd)
 fi
 echo "Data mounted from ${DATASET_DIR}"
