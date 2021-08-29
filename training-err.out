@@ -1,0 +1,14 @@
+DeepSdf - INFO - Experiment description: 
+This is a test experiment to see if we can memorize a vector distance function from 3 examples
+DeepSdf - INFO - training with 3 GPU(s)
+DeepSdf - INFO - There are 3 scenes
+DeepSdf - INFO - starting from epoch 1
+DeepSdf - INFO - Number of decoder parameters: 2109950
+DeepSdf - INFO - Number of shape code parameters: 768 (# codes 3, code dim 256)
+DeepSdf - INFO - epoch 1...
+Traceback (most recent call last):
+  File "/global/scratch/vwang/shape-generation/DeepSDF/train_deep_sdf.py", line 625, in <module>
+    main_function(args.experiment_directory, args.continue_from, int(args.batch_split))
+  File "/global/scratch/vwang/shape-generation/DeepSDF/train_deep_sdf.py", line 504, in main_function
+    ground_truth = torch.cat([sdf_gt, theta_phi], dim=1) # Added ground truth
+RuntimeError: Expected object of scalar type float but got scalar type double for sequence element 1.

@@ -10,7 +10,6 @@ import torch
 
 import deep_sdf.utils
 
-
 def create_mesh(
     decoder, latent_vec, filename, N=256, max_batch=32 ** 3, offset=None, scale=None
 ):

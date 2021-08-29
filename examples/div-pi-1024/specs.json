@@ -1,0 +1,43 @@
+{
+	"Description" : "This is a test experiment to see if we can memorize a vector distance function from 3 examples",
+	"DataSource" : "/global/scratch/vwang/shape-generation/DeepSDF/data",
+	"TrainSplit" : "/global/scratch/vwang/shape-generation/DeepSDF/examples/splits/vec_test_train.json",
+	"TestSplit" : "/global/scratch/vwang/shape-generation/DeepSDF/examples/splits/vec_test_test.json",
+	"NetworkArch" : "deep_sdf_decoder",
+	"NetworkSpecs" : {
+		"dims" : [ 512, 512, 512, 512, 512, 512, 512, 1024],
+		"dropout" : [0, 1, 2, 3, 4, 5, 6, 7],
+		"dropout_prob" : 0.2,
+		"norm_layers" : [0, 1, 2, 3, 4, 5, 6, 7],
+		"latent_in" : [4],
+		"xyz_in_all" : false,
+		"use_tanh" : false,
+		"latent_dropout" : false,
+		"weight_norm" : true
+		},
+	"CodeLength" : 256,
+	"NumEpochs" : 2001,
+	"SnapshotFrequency" : 1000,
+	"AdditionalSnapshots" : [ 100, 500 ],
+	"LearningRateSchedule" : [
+		{ 
+			"Type" : "Step",
+			"Initial" : 0.0005,
+			"Interval" : 500,
+			"Factor" : 0.5
+		},
+		{
+			"Type" : "Step",
+			"Initial" : 0.001,
+			"Interval" : 500,
+			"Factor" : 0.5
+		}],
+	"SamplesPerScene" : 525000,
+	"ScenesPerBatch" : 1,
+	"DataLoaderThreads" : 1,
+	"ClampingDistance" : 0.1,
+	"CodeRegularization" : true,
+	"CodeRegularizationLambda" : 1e-4,
+	"CodeTargetStdDev" : 1.0,
+	"CodeBound" : 1.0
+}

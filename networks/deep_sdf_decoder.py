@@ -25,7 +25,8 @@ class Decoder(nn.Module):
         def make_sequence():
             return []
 
-        dims = [latent_size + 3] + dims + [1]
+        # dims is an array of dimensions where dims[i] is the number of nodes at layer i
+        dims = [latent_size + 3] + dims + [1 + 2] # Added last layer to have extra 2 nodes
 
         self.num_layers = len(dims)
         self.norm_layers = norm_layers
@@ -54,6 +55,7 @@ class Decoder(nn.Module):
             else:
                 setattr(self, "lin" + str(layer), nn.Linear(dims[layer], out_dim))
 
+            # Not applying weight norm but want to apply some form of normalization on this layer -> Apply layer norm
             if (
                 (not weight_norm)
                 and self.norm_layers is not None
@@ -89,9 +91,10 @@ class Decoder(nn.Module):
                 x = torch.cat([x, xyz], 1)
             x = lin(x)
             # last layer Tanh
-            if layer == self.num_layers - 2 and self.use_tanh:
+            if layer == self.num_layers - 2 and self.use_tanh: # look here
                 x = self.tanh(x)
             if layer < self.num_layers - 2:
+                # If this layer uses layer norm
                 if (
                     self.norm_layers is not None
                     and layer in self.norm_layers
@@ -103,6 +106,11 @@ class Decoder(nn.Module):
                 if self.dropout is not None and layer in self.dropout:
                     x = F.dropout(x, p=self.dropout_prob, training=self.training)
 
+        # linear layer + non-linearity + layer
+        # branch 512 -> 512 + 512 -> 1 - 2 -> 
+
+        # weighted loss: for exach sample, get no. of poinst with abs(sdf) < 0.01 weight = 1/proportion (0.01 is thrershold for weight)
+        # check if shifted by 2pi (especially theta)
         if hasattr(self, "th"):
             x = self.th(x)
 
