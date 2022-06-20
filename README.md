@@ -82,11 +82,13 @@ In order to use mesh data for training a DeepSDF model, the mesh will need to be
 - [Pangolin][2]
 - [nanoflann][3]
 - [Eigen3][4]
+- [variant][5] (could be needed when doing the preprocess step, see https://github.com/facebookresearch/DeepSDF/issues/29)
 
 [1]: https://github.com/CLIUtils/CLI11
 [2]: https://github.com/stevenlovegrove/Pangolin
 [3]: https://github.com/jlblancoc/nanoflann
 [4]: https://eigen.tuxfamily.org
+[5]: https://github.com/mpark/variant
 
 With these dependencies, the build process follows the standard CMake procedure:
 
